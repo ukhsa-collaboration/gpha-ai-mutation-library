@@ -8,11 +8,11 @@ There is a validation script that takes a new table(s), checks that the new data
 
 ## Repo Layout
 |
-|- README
-|- LICENSE
-|- table_validation.py
-|- archived |- <DATE_1> |- ha_mutation_table.csv
-                        |- pb1_mutation_table.csv
+|- README  
+|- LICENSE  
+|- table_validation.py  
+|- archived |- <DATE_1> |- ha_mutation_table.csv  
+                        |- pb1_mutation_table.csv  
                         |- pb2_mutation_table.csv
                         |- na_mutation_table.csv
                         |- ns_mutation_table.csv
