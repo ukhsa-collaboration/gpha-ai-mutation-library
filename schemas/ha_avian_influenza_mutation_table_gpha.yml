@@ -1,0 +1,89 @@
+
+name: ha
+filename: ha_avian_influenza_mutation_table_gpha.tsv
+strict_columns: true
+primary_key: ["feature_type", "combination_name", "combination_id", "segment", "position_met1", "position_H5", "position_H3", "ref_AA", "alt_AA", "name", "subtype_tested", "subtype_notes", "phenotypic_consequences", "phenotypic_category", "concern_score", "confidence_score", "phenotypic_effect", "host_type", "host_taxon", "source", "references", "PMID", "additional_comments", "gpha_background", "gpha_known_muts"]
+
+columns:
+  - name: feature_type
+    type: str
+    required: true
+    allowed_values_file: "schemas/reference_lists/feature_type_list.txt"   # one gene name per line
+  - name: combination_name
+    type: str
+    required: false
+  - name: combination_id
+    type: str
+    required: false
+  - name: segment
+    type: str
+    required: true
+    allowed_values_file: "schemas/reference_lists/segment_list.txt"
+  - name: position_met1
+    type: int
+    required: true
+  - name: position_H5
+    type: int
+    required: true
+  - name: ref_AA
+    type: str
+    required: true
+    allowed_values_file: "schemas/reference_lists/aa_list.txt"
+  - name: alt_AA
+    type: str
+    required: true
+    allowed_values_file: "schemas/reference_lists/aa_list.txt"
+  - name: name
+    type: str
+    required: true
+    pattern: "^[A-Z][0-9]+[A-Z]$"
+  - name: subtype_tested
+    type: str
+    required: true
+    pattern: "^H[0-9]N[0-9]$" # e.g. H5N1
+  - name: subtype_notes
+    type: str
+    required: false
+  - name: phenotypic_consequences
+    type: str
+    required: true
+  - name: phenotypic_category
+    type: str
+    required: true
+    allowed_values_file: "schemas/reference_lists/phenotypic_categories_list.txt"
+  - name: concern_score
+    required: false
+    type: str
+  - name: confidence_score
+    required: false
+    type: str
+  - name: phenotypic_effect
+    type: str
+    required: false
+  - name: host_type
+    type: str
+    required: false
+    allowed_values_file: "schemas/reference_lists/host_type_list.txt"
+  - name: host_taxon
+    type: str
+    required: false
+  - name: source
+    type: str
+    required: true
+  - name: references
+    type: str
+    required: true
+  - name: PMID
+    type: int
+    required: true
+  - name: additional_comments
+    type: str
+    required: false
+  - name: gpha_backgroud
+    type: str
+    required: true
+    allowed_values: ["Y", "N", ""]
+  - name: gpha_known_muts
+    type: str
+    required: true
+    allowed_values: ["Y", "N", ""]
