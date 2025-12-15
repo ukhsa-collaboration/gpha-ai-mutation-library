@@ -8,32 +8,14 @@ There is a validation script that takes a new table(s), checks that the new data
 
 ## Repo Layout
 ```
-|
-|- README  
-|- LICENSE  
-|- table_validation.py  
-|- archived |- <DATE_1> |- <DATE_1>_ha_mutation_table.csv  
-                        |- <DATE_1>_pb1_mutation_table.csv   
-                        |- <DATE_1>_pb2_mutation_table.csv  
-                        |- <DATE_1>_na_mutation_table.csv  
-                        |- <DATE_1>_ns_mutation_table.csv  
-                        |- <DATE_1>_np_mutation_table.csv  
-                        |- <DATE_1>_m_mutation_table.csv  
-                        |- <DATE_1>_pa_mutation_table.csv  
-|- ha_mutation_table.csv  
-|- pb1_mutation_table.csv  
-|- pb2_mutation_table.csv  
-|- na_mutation_table.csv  
-|- ns_mutation_table.csv  
-|- np_mutation_table.csv  
-|- m_mutation_table.csv  
-|- pa_mutation_table.csv  
-|- updates.log  
+
 ```
 ## Usage
 ### Accessing Tables
-Tables should be read directly from GitHub with an appropriate URL i.e.
-``
+Tables should be read directly from GitHub with an appropriate URL i.e
+```
+<EXAMPLE>
+```
 ### Updating Tables
 The validation script will:
     - Updates logs
@@ -42,3 +24,12 @@ The validation script will:
     - Checks expected data in columns meets requirements
     - If QC checks passed, archives original table(s)
     - Creates new table in main directory
+
+#### Validate & update from a folder containing multiple tables
+```
+python scripts/validate_and_update.py --input uploads/ --user "<USERNAME>"
+```
+#### Validate & update a single file
+```
+python scripts/validate_and_update.py --input uploads/mutations.csv --user "<USERNAME>"
+```
