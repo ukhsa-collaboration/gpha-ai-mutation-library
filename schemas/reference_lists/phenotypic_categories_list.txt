@@ -1,0 +1,12 @@
+binding_affinity
+fusion_ph
+infectivity
+lethality
+pathogencity
+replication
+stability
+tissue_tropism
+transmissibility
+two_six_receptor_binding
+two_three_receptor_binding
+virulence

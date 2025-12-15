@@ -1,0 +1,5 @@
+single
+combination
+multi_segment_combination
+combinaton
+deletion
