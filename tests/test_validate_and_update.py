@@ -37,3 +37,15 @@ def test_find_schema_for_file(load_schemas, correct_ha_tsv):
 def test_validate_dataframe(correct_ha_df, correct_ha_schema):
     errs = vau.validate_dataframe(correct_ha_df, correct_ha_schema)
     assert errs == []
+
+# Test dataframe validation
+"""
+what am i trying to test?
+- the correct schemas are read in per column?
+- incorrect data is identfied as expected
+- error messages are reported appropriately
+    - if you provide a file that is inappropriately formatted provide appropriate feedback
+- things are archived appropriately
+- Logs are appropriate
+
+"""
