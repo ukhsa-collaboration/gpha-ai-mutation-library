@@ -23,4 +23,4 @@ def test_find_schema_for_file(correct_ha_tsv, schemas):
     schema = vau.find_schema_for_file(schemas, correct_ha_tsv)
     key = str("ha_avian_influenza_mutation_table_gpha.tsv")
 
-    assert schema.type == dict
+    assert isinstance(schema, dict)
