@@ -14,7 +14,7 @@ def ha_schema_yaml():
     schema = vau.load_schemas(ha_yml)
     return schema
 
-def test_find_schema_for_file(correct_ha_tsv, schema):
+def test_find_schema_for_file(correct_ha_tsv, ha_schema_yaml):
     ''' Test reading of tsv files '''
-    schema = vau.find_schema_for_file(correct_ha_tsv, schema)
+    schema = vau.find_schema_for_file(correct_ha_tsv, ha_schema_yaml)
     print(schema)
