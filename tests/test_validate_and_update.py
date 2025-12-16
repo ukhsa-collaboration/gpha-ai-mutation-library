@@ -36,4 +36,5 @@ def test_find_schema_for_file(load_schemas, correct_ha_tsv):
 
 def test_validate_dataframe(correct_ha_df, correct_ha_schema):
     errs = vau.validate_dataframe(correct_ha_df, correct_ha_schema)
+    print(errs)
     assert errs
