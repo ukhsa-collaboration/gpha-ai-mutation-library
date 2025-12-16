@@ -84,7 +84,6 @@ def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[d
     
     for key, sch in schemas.items():
         if key.startswith(seg):
-            print("match")
             return sch
     return None
 
@@ -308,12 +307,13 @@ def main():
     all_errors: Dict[str, List[str]] = {}
     for f in files:
         schema = find_schema_for_file(schemas_map, f)
-        breakpoint()
         if not schema:
             all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]
             continue
         try:
             df = read_table(f)
+            print(df)
+            breakpoint()
         except Exception as e:
             all_errors[f] = [f"Failed to read table: {e}"]
             continue
