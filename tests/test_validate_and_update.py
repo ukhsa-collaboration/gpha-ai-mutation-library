@@ -24,4 +24,5 @@ def test_find_schema_for_file(load_schemas, correct_ha_tsv):
     print(load_schemas)
     print(correct_ha_tsv)
     schema = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
+    print(schema)
     assert schema
