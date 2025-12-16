@@ -83,7 +83,7 @@ def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[d
     print(seg)
 
     for key, sch in schemas.items():
-        if key.starswith(seg):
+        if key.startswith(seg):
             print(key)
             return sch
     return None
