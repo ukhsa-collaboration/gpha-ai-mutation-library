@@ -300,12 +300,14 @@ def main():
         sys.exit(2)
 
     schemas_map = load_schemas(args.schemas_dir)
+    print(schemas_map)
 
     # Validate all first
     validated: List[Tuple[str, dict]] = []
     all_errors: Dict[str, List[str]] = {}
     for f in files:
         schema = find_schema_for_file(schemas_map, f)
+        print(schema)
         breakpoint()
         if not schema:
             all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]
