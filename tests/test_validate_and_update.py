@@ -18,7 +18,7 @@ def load_schemas():
     return schemas_map
 
 tsv = "tables/ha_correct_test.tsv"
-schemas = "vscode-remote://ssh-remote%2Bcogcol01.unix.phe.gov.uk/home/phe.gov.uk/nicholas.ellaby/code_dev/gpha-ai-mutation-library/schemas"
+schemas = "/home/phe.gov.uk/nicholas.ellaby/code_dev/gpha-ai-mutation-library/schemas"
 
 ## Tests
 def test_find_schema_for_file(load_schemas, correct_ha_tsv):
