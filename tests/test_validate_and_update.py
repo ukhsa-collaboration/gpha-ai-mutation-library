@@ -1,6 +1,9 @@
 import pytest
 from pathlib import Path
 from mutation_table_updater import validate_and_update as vau
+
+
+## Fixtures
 @pytest.fixture
 def correct_ha_tsv():
     SCRIPT_DIR = Path(__file__).resolve().parent
@@ -14,7 +17,8 @@ def schemas():
     schemas = vau.load_schemas(schemas_fp)
     return schemas
 
+## Tests
 def test_find_schema_for_file(correct_ha_tsv, schemas):
     ''' Test reading of tsv files '''
     schema = vau.find_schema_for_file(schemas, correct_ha_tsv)
-    assert schema == ''
+    assert schema
