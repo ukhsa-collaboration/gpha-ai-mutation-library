@@ -1,4 +1,5 @@
 import pytest
+import pandas as pd
 from pathlib import Path
 from mutation_table_updater import validate_and_update as vau
 
@@ -17,8 +18,22 @@ def load_schemas():
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
+@pytest.fixture
+def correct_ha_df(correct_ha_tsv):
+    df = vau.read_table(correct_ha_tsv)
+    return df
+
+@pytest.fixture
+def correct_ha_schema(load_schemas, correct_ha_tsv):
+    schema = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
+    return schema
+
 ## Tests
 def test_find_schema_for_file(load_schemas, correct_ha_tsv):
+    """ Test that the schema file is retrieved. """
     schema = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
     assert schema.get('name')
-    
+
+def test_validate_dataframe(correct_ha_df, correct_ha_schema):
+    errs = vau.validate_dataframe(correct_ha_df, correct_ha_schema)
+    assert errs
