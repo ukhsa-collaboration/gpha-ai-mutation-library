@@ -79,16 +79,10 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
 
 def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[dict]:
     base = os.path.basename(file_path)
-    stem, ext = os.path.splitext(base)
-    # Try direct filename match first
-    if base in schemas:
-        return schemas[base]
-    # Try name-only (stem) match
-    if stem in schemas:
-        return schemas[stem]
-    # Try schema with filename matching regardless of ext (e.g., mutations + .csv/.tsv)
+    seg = str(base.split('_')[0])+'_'
+
     for key, sch in schemas.items():
-        if sch.get("filename") and os.path.splitext(sch["filename"])[0] == stem:
+        if key.starswith(seg):
             return sch
     return None
 
