@@ -17,14 +17,12 @@ def load_schemas():
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
-tsv = "tables/ha_correct_test.tsv"
-schemas = "/home/phe.gov.uk/nicholas.ellaby/code_dev/gpha-ai-mutation-library/schemas"
-
 ## Tests
 def test_find_schema_for_file(load_schemas, correct_ha_tsv):
     ''' Test reading of tsv files '''
     print("OUTPUTS")
-    schamas_dict = vau.load_schemas(schemas)
-    schema = vau.find_schema_for_file(schamas_dict, tsv)
+    print(load_schemas)
+    print(correct_ha_tsv)
+    schema = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
     assert schema.get('name')
     
