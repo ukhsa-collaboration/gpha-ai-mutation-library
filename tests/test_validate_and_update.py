@@ -16,5 +16,5 @@ def schemas():
 
 def test_find_schema_for_file(correct_ha_tsv, schemas):
     ''' Test reading of tsv files '''
-    schema = vau.find_schema_for_file(correct_ha_tsv, schemas)
+    schema = vau.find_schema_for_file(str(correct_ha_tsv), schemas)
     print(schema)
