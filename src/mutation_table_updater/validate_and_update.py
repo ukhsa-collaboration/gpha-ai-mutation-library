@@ -90,7 +90,7 @@ def find_schema_for_file(schemas: Dict[str, dict], file_path: Path) -> Optional[
         if key.startswith(seg):
             print("match")
             return sch
-    return None
+    # return None
 
 # ---------- Validation primitives ----------
 def _type_check(series: pd.Series, typ: str) -> List[int]:
