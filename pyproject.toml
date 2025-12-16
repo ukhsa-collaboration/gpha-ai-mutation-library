@@ -1,5 +1,5 @@
 [project]
-    name = "gpha-ai-mutation-library"
+    name = "mutation_table_updater"
     authors = [{name = "Nicholas Ellaby", email = "nicholas.ellaby@ukhsa.gov.uk"}]
     description = "AI-Mutation-Library: A library utility for storing and upating validated avian influenza genomic mutations."
     dynamic = ["version"]
@@ -12,7 +12,7 @@
     ]
 
 [tool.setuptools.dynamic]
-version = { attr = "gpha-ai-mutation-library.__version__" }
+version = { attr = "mutation_table_updater.__version__" }
 
 [build-system]
 requires = ["setuptools"]
