@@ -80,9 +80,13 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
 def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[dict]:
     base = os.path.basename(file_path)
     seg = str(base.split('_')[0])+'_'
-
+    print(f"Segment: {seg}")
+    
     for key, sch in schemas.items():
+        print(f"Key {key}")
+        print(f"Schema {sch}")
         if key.startswith(seg):
+            print("match")
             return sch
     return None
 
@@ -306,7 +310,6 @@ def main():
     all_errors: Dict[str, List[str]] = {}
     for f in files:
         schema = find_schema_for_file(schemas_map, f)
-        print(schema)
         if not schema:
             all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]
             continue
