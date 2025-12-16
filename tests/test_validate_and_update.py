@@ -8,13 +8,13 @@ def correct_ha_tsv():
     return ha_tsv_fp
 
 @pytest.fixture
-def ha_schema_yaml():
+def schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    ha_yml = SCRIPT_DIR / "../schemas/ha_avian_influenza_mutation_table_gpha.yml"
-    schema = vau.load_schemas(ha_yml)
+    schemas_fp = SCRIPT_DIR / "../schemas/"
+    schemas = vau.load_schemas(schemas_fp)
     return schema
 
-def test_find_schema_for_file(correct_ha_tsv, ha_schema_yaml):
+def test_find_schema_for_file(correct_ha_tsv, schemas):
     ''' Test reading of tsv files '''
-    schema = vau.find_schema_for_file(correct_ha_tsv, ha_schema_yaml)
+    schema = vau.find_schema_for_file(correct_ha_tsv, schemas)
     print(schema)
