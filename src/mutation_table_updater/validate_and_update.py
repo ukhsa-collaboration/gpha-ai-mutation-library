@@ -78,9 +78,8 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
             schemas[key] = schema
     return schemas
 
-def find_schema_for_file(schemas: Dict[str, dict], file_path: Path) -> Optional[dict]:
-    file_path = Path(file_path)
-    base = Path.name(file_path)
+def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[dict]:
+    base = os.basename(file_path)
     seg = str(base.split('_')[0])+'_'
     print(f"Segment: {seg}")
     
@@ -90,7 +89,7 @@ def find_schema_for_file(schemas: Dict[str, dict], file_path: Path) -> Optional[
         if key.startswith(seg):
             print("match")
             return sch
-    # return None
+    return None
 
 # ---------- Validation primitives ----------
 def _type_check(series: pd.Series, typ: str) -> List[int]:
