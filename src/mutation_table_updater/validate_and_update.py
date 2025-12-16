@@ -17,6 +17,7 @@ import os
 import re
 import shutil
 import sys
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -78,7 +79,7 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
     return schemas
 
 def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[dict]:
-    base = os.path.basename(file_path)
+    base = Path.basename(file_path)
     seg = str(base.split('_')[0])+'_'
     print(f"Segment: {seg}")
     
