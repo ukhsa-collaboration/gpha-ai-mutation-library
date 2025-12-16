@@ -85,8 +85,8 @@ columns:
   - name: gpha_background
     type: str
     required: true
-    allowed_values: ["Y", "N", ""]
+    allowed_values: ["Y", "N", Null]
   - name: gpha_known_muts
     type: str
     required: true
-    allowed_values: ["Y", "N", ""]
+    allowed_values: ["Y", "N", Null]
