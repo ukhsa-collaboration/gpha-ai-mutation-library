@@ -307,7 +307,6 @@ def main():
     for f in files:
         schema = find_schema_for_file(schemas_map, f)
         print(schema)
-        breakpoint()
         if not schema:
             all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]
             continue
