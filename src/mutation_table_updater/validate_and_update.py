@@ -300,7 +300,6 @@ def main():
         sys.exit(2)
 
     schemas_map = load_schemas(args.schemas_dir)
-    print(schemas_map)
 
     # Validate all first
     validated: List[Tuple[str, dict]] = []
