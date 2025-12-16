@@ -79,7 +79,7 @@ columns:
   - name: additional_comments
     type: str
     required: false
-  - name: gpha_backgroud
+  - name: gpha_background
     type: str
     required: true
     allowed_values: ["Y", "N", ""]
