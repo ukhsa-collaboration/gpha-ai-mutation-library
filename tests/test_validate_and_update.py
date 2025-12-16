@@ -21,4 +21,6 @@ def schemas():
 def test_find_schema_for_file(correct_ha_tsv, schemas):
     ''' Test reading of tsv files '''
     schema = vau.find_schema_for_file(schemas, correct_ha_tsv)
-    assert "ha_avian_influenza_mutation_table_gpha.tsv" in schema
+    key = str("ha_avian_influenza_mutation_table_gpha.tsv")
+
+    assert key in schema, f"Expected key {key} in schema keys"
