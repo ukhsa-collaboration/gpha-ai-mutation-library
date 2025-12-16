@@ -18,7 +18,7 @@ def schemas():
     return schemas
 
 ## Tests
-def test_find_schema_for_file(correct_ha_tsv, schemas):
+def test_find_schema_for_file(schemas, correct_ha_tsv):
     ''' Test reading of tsv files '''
-    schema = vau.find_schema_for_file(schemas, correct_ha_tsv)
-    assert schema['name'] == 'ha'
+    schema_match = vau.find_schema_for_file(schemas, correct_ha_tsv)
+    assert schema_match['name'] == 'ha'
