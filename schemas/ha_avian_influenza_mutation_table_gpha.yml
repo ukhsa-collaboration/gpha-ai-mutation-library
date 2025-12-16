@@ -25,6 +25,9 @@ columns:
   - name: position_H5
     type: int
     required: true
+  - name: position_H3
+    type: int
+    required: true
   - name: ref_AA
     type: str
     required: true
@@ -79,11 +82,11 @@ columns:
   - name: additional_comments
     type: str
     required: false
-  - name: gpha_backgroud
+  - name: gpha_background
     type: str
-    required: true
+    required: false
     allowed_values: ["Y", "N", ""]
   - name: gpha_known_muts
     type: str
-    required: true
-    allowed_values: ["Y", "N", ""]
+    required: false
+    allowed_values: ["Y", "N", ""z]
