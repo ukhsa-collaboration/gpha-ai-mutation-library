@@ -25,6 +25,9 @@ columns:
   - name: position_H5
     type: int
     required: true
+  - name: position_H3
+    type: int
+    required: true
   - name: ref_AA
     type: str
     required: true
