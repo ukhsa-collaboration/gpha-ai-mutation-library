@@ -14,11 +14,11 @@ def correct_ha_tsv():
 def schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_fp = SCRIPT_DIR / "../schemas/"
-    schemas = vau.load_schemas(schemas_fp)
-    return schemas
+    schemas_map = vau.load_schemas(schemas_fp)
+    return schemas_map
 
 ## Tests
-def test_find_schema_for_file(schemas, correct_ha_tsv):
+def test_find_schema_for_file(schemas_map, correct_ha_tsv):
     ''' Test reading of tsv files '''
-    schema_match = vau.find_schema_for_file(schemas, correct_ha_tsv)
-    assert schema_match['name'] == 'ha'
+    schema = vau.find_schema_for_file(schemas_map, correct_ha_tsv)
+    assert schema['name'] == 'ha'
