@@ -14,7 +14,7 @@ def schemas():
     schemas = vau.load_schemas(schemas_fp)
     return schemas
 
-def test_find_schema_for_file(correct_ha_tsv, schemas):
+def test_find_schema_for_file(capsys, correct_ha_tsv, schemas):
     ''' Test reading of tsv files '''
     schema = vau.find_schema_for_file(schemas, correct_ha_tsv)
     print(schema)
