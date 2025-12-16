@@ -12,7 +12,7 @@ def schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_fp = SCRIPT_DIR / "../schemas/"
     schemas = vau.load_schemas(schemas_fp)
-    return schema
+    return schemas
 
 def test_find_schema_for_file(correct_ha_tsv, schemas):
     ''' Test reading of tsv files '''
