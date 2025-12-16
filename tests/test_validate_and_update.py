@@ -23,6 +23,6 @@ def test_find_schema_for_file(load_schemas, correct_ha_tsv):
     print("OUTPUTS")
     print(load_schemas)
     print(correct_ha_tsv)
-    schema = vau.find_schemaddd_for_file(load_schemas, correct_ha_tsv)
-    print(schema)
-    assert schema
+    schema = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
+    assert schema.get('name')
+    
