@@ -11,9 +11,10 @@ def correct_ha_tsv():
 def ha_schema_yaml():
     SCRIPT_DIR = Path(__file__).resolve().parent
     ha_yml = SCRIPT_DIR / "../schemas/ha_avian_influenza_mutation_table_gpha.yml"
-    return ha_yml
+    schema = vau.load_schemas(ha_yml)
+    return schema
 
-def test_find_schema_for_file(correct_ha_tsv, ha_schema_yaml):
+def test_find_schema_for_file(correct_ha_tsv, schema):
     ''' Test reading of tsv files '''
-    schema = vau.find_schema_for_file(correct_ha_tsv, ha_schema_yaml)
+    schema = vau.find_schema_for_file(correct_ha_tsv, schema)
     print(schema)
