@@ -15,7 +15,7 @@
 version = { attr = "mutation_table_updater.__version__" }
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
