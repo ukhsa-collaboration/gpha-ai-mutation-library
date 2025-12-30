@@ -49,6 +49,6 @@ line-length = 120
 [tool.ruff.format]
 quote-style = "double"
 
-[pytest]
+[tool.pytest.ini_options]
 tmp_path_retention_policy = "failed"
 tmp_path_retention_count = 2
