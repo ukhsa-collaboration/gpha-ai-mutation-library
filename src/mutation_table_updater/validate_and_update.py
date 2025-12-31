@@ -94,12 +94,14 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
             schemas[key] = schema
     return schemas
 
-def check_filname(fn: str, seg_names: list) -> None:
+def check_filename(fn: str, seg_names: list) -> None:
     ''' Check if filanem starts with segment, else fail gracefully.'''
     if fn.startswith(tuple(seg_names)):
-        return
+        return True
     else:
-        logging.error
+        logging.warning("Input File %s did start with a segment ID (%s). Skipped.",
+                        (fn, seg_names.join(", ")))
+        return False
 
 def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[dict]:
     base = os.path.basename(file_path)
@@ -335,40 +337,40 @@ def main():
     validated: List[Tuple[str, dict]] = []
     all_errors: Dict[str, List[str]] = {}
     for f in files:
-        # check filename
-        check_filename(f, segment_names)
+        # check filename stats with segment ID
+        if check_filename(f, segment_names) is True:
 
-        schema = find_schema_for_file(schemas_map, f)
-        if not schema:
-            all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]
-            continue
-        try:
-            df = read_table(f)
-            print(df)
-            breakpoint()
-        except Exception as e:
-            all_errors[f] = [f"Failed to read table: {e}"]
-            continue
+            schema = find_schema_for_file(schemas_map, f)
+            if not schema:
+                all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]
+                continue
+            try:
+                df = read_table(f)
+                print(df)
+                breakpoint()
+            except Exception as e:
+                all_errors[f] = [f"Failed to read table: {e}"]
+                continue
 
-        errs = validate_dataframe(df, schema)
-        if errs:
-            all_errors[f] = errs
-        else:
-            validated.append((f, schema))
-
-    # If any file failed, print a grouped report and exit non-zero
-    if len(validated) != len(files):
-        print("Validation failed for one or more files:\n", file=sys.stderr)
-        for f, errs in all_errors.items():
+            errs = validate_dataframe(df, schema)
             if errs:
-                print(f"--- {f} ---", file=sys.stderr)
-                for e in errs:
-                    print(f"  * {e}", file=sys.stderr)
-        sys.exit(1)
+                all_errors[f] = errs
+            else:
+                validated.append((f, schema))
 
-    # All good → archive + replace
-    archive_and_replace(validated, args.tables_dir, args.archive_dir, args.user, args.log_file)
-    print(f"Success. {len(validated)} table(s) validated and updated.\nLog: {args.log_file}")
+        # If any file failed, print a grouped report and exit non-zero
+        if len(validated) != len(files):
+            print("Validation failed for one or more files:\n", file=sys.stderr)
+            for f, errs in all_errors.items():
+                if errs:
+                    print(f"--- {f} ---", file=sys.stderr)
+                    for e in errs:
+                        print(f"  * {e}", file=sys.stderr)
+            sys.exit(1)
+
+        # All good → archive + replace
+        archive_and_replace(validated, args.tables_dir, args.archive_dir, args.user, args.log_file)
+        print(f"Success. {len(validated)} table(s) validated and updated.\nLog: {args.log_file}")
 
 if __name__ == "__main__":
     main()
