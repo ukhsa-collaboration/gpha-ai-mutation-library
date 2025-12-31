@@ -340,15 +340,12 @@ def main():
     for f in files:
         # check filename stats with segment ID
         if check_filename(f, segment_names) is True:
-
             schema = find_schema_for_file(schemas_map, f)
             if not schema:
                 all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]
                 continue
             try:
                 df = read_table(f)
-                print(df)
-                breakpoint()
             except Exception as e:
                 all_errors[f] = [f"Failed to read table: {e}"]
                 continue
