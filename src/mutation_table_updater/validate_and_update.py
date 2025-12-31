@@ -19,6 +19,7 @@ import shutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import logging
 
 import pandas as pd
 import yaml
@@ -28,6 +29,21 @@ TABLES_DIR_DEFAULT = "tables"
 ARCHIVE_DIR_DEFAULT = "archive"
 SCHEMAS_DIR_DEFAULT = "schemas"
 LOG_FILE_DEFAULT = "updates.log"
+
+#---------- Logging Setup -------------
+
+def setup_logging(log_filename, logging_level):
+    handlers = [
+        logging.StreamHandler(),                 # stdout
+        logging.FileHandler(log_filename, mode="w"), # file
+    ]
+
+    logging.basicConfig(
+        level=logging_level,
+        format="%(asctime)s | %(name)s | %(levelname)-8s | %(message)s",
+        handlers=handlers,
+    )
+
 
 # ---------- Helpers ----------
 def utc_now_iso() -> str:
@@ -72,15 +88,22 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
             with open(os.path.join(schemas_dir, fn), "r", encoding="utf-8") as f:
                 schema = yaml.safe_load(f)
             # Index by canonical filename (preferred) or table name
-            key = schema.get("filename") or schema.get("name")
+            key = schema.get("name")
             if not key:
-                raise ValueError(f"Schema {fn} missing 'filename' or 'name'")
+                raise ValueError(f"Schema {fn} missing 'name'")
             schemas[key] = schema
     return schemas
 
+def check_filname(fn: str, seg_names: list) -> None:
+    ''' Check if filanem starts with segment, else fail gracefully.'''
+    if fn.startswith(tuple(seg_names)):
+        return
+    else:
+        logging.error
+
 def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[dict]:
     base = os.path.basename(file_path)
-    seg = str(base.split('_')[0])+'_'
+    seg = str(base.split('_')[0])
     
     for key, sch in schemas.items():
         if key.startswith(seg):
@@ -291,8 +314,12 @@ def main():
     ap.add_argument("--archive-dir", default=ARCHIVE_DIR_DEFAULT)
     ap.add_argument("--schemas-dir", default=SCHEMAS_DIR_DEFAULT)
     ap.add_argument("--log-file", default=LOG_FILE_DEFAULT)
+    ap.add_argument("--log-level", default="INFO", choice=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
     ap.add_argument("--user", default=os.getenv("USER", "unknown"))
     args = ap.parse_args()
+
+    # Set up Logging
+    setup_logging(args.log_file, args.log_level)
 
     # Collect files and schemas
     files = list_candidate_files(args.input)
@@ -302,10 +329,15 @@ def main():
 
     schemas_map = load_schemas(args.schemas_dir)
 
+    segment_names = ['pb2','pb1','ha','m','na','np','ns','pa']
+
     # Validate all first
     validated: List[Tuple[str, dict]] = []
     all_errors: Dict[str, List[str]] = {}
     for f in files:
+        # check filename
+        check_filename(f, segment_names)
+
         schema = find_schema_for_file(schemas_map, f)
         if not schema:
             all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]

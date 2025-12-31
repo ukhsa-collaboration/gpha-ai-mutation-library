@@ -12,6 +12,12 @@ def correct_ha_tsv():
     return ha_tsv_fp
 
 @pytest.fixture
+def failed_fn_tsv():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    failed_tsv_fp = SCRIPT_DIR / "tables/incorrect_fn_test.tsv"
+    return failed_tsv_fp
+
+@pytest.fixture
 def load_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_dir = SCRIPT_DIR / "../schemas/"
