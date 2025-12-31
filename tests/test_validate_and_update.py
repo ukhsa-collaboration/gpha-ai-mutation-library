@@ -44,6 +44,8 @@ def test_validate_dataframe(correct_ha_df, correct_ha_schema):
     errs = vau.validate_dataframe(correct_ha_df, correct_ha_schema)
     assert errs == []
 
+def test_
+
 # Test dataframe validation
 """
 what am i trying to test?
