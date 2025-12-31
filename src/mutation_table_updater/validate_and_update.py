@@ -100,7 +100,7 @@ def check_filename(fn: str, seg_names: list) -> None:
         return True
     else:
         logging.warning("Input File %s did start with a segment ID (%s). Skipped.",
-                        (fn, seg_names.join(", ")))
+                        (fn, ", ".join(seg_names)))
         return False
 
 def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[dict]:
