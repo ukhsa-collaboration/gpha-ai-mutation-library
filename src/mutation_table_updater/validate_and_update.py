@@ -316,7 +316,7 @@ def main():
     ap.add_argument("--archive-dir", default=ARCHIVE_DIR_DEFAULT)
     ap.add_argument("--schemas-dir", default=SCHEMAS_DIR_DEFAULT)
     ap.add_argument("--log-file", default=LOG_FILE_DEFAULT)
-    ap.add_argument("--log-level", default="INFO", choice=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+    ap.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
     ap.add_argument("--user", default=os.getenv("USER", "unknown"))
     args = ap.parse_args()
 
