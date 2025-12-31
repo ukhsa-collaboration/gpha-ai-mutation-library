@@ -96,10 +96,10 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
 
 def check_filename(fn: str, seg_names: list) -> None:
     ''' Check if filanem starts with segment, else fail gracefully.'''
-    if fn.startswith(tuple(seg_names)):
+    if Path(fn).name.startswith(tuple(seg_names)):
         return True
     else:
-        logging.warning("Input File %s did start with a segment ID (%s). Skipped.",
+        logging.warning("Input File %s did not start with a segment ID (%s). Skipped.",
                         fn, ", ".join(seg_names))
         return False
 
