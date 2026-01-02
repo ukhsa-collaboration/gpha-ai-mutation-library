@@ -138,7 +138,8 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
         if len(missing) > 0:
             logging.warning('Segment file %s was missing the essential keys %s. YAML should contain the following primary keys: %s',
                 segment, ", ".join(missing), ", ".join(expected_yaml_main_keys))
-        print('-------------END-------------')
+            return False
+        
         # 
         #     assert key in seg_dict, logging.warning(
         #         'Segment file missing expected key %s. Should contain the following primary keys: %s',
@@ -371,7 +372,8 @@ def main():
 
     schemas_map = load_schemas(args.schemas_dir)
 
-    validate_schemas(schemas_map)
+    if validate_schemas(schemas_map) is False:
+        sys.exit()
     breakpoint()
 
     segment_names = ['pb2','pb1','ha','m','na','np','ns','pa']

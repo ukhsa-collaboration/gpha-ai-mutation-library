@@ -36,6 +36,20 @@ def correct_ha_schema(load_schemas, correct_ha_tsv):
     schema = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
     return schema
 
+@pytest.fixture
+def load_bad_schemas():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    schemas_dir = SCRIPT_DIR / "../bad_schemas/"
+    schemas_map = vau.load_schemas(schemas_dir)
+    return schemas_map
+
+@pytest.fixture
+def load_good_schemas():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    schemas_dir = SCRIPT_DIR / "../good_schemas/"
+    schemas_map = vau.load_schemas(schemas_dir)
+    return schemas_map
+
 ## Tests
 def test_find_schema_for_file(load_schemas, correct_ha_tsv):
     """ Test that the schema file is retrieved. """
@@ -79,6 +93,29 @@ def test_check_correct_filename(correct_ha_tsv):
 
     assert check_fn_return is True
 
+
+# def test_validate_schemas_correct(load_schemas, correct_ha_tsv):
+#     """ Test schema contains the right information """
+#     schemas_map  = vau.validate_schemas(load_schemas)
+
+#     # what fields are we expecting
+#     # keys: name, filname, strict_columns, primary_key, columns
+#     # Primary Key should container: "feature_type", "combination_name", "combination_id", "segment", "position_met1", "position_H5", "position_H3", "ref_AA", "alt_AA", "name", "subtype_tested", "subtype_notes", "phenotypic_consequences", "phenotypic_category", "concern_score", "confidence_score", "phenotypic_effect", "host_type", "host_taxon", "source", "references", "PMID", "additional_comments", "gpha_background", "gpha_known_muts"
+#     # columns, each item should contain: 'name', 'type', 'required'
+
+#     pass
+
+def test_incorrect_main_key_schema_file(load_bad_schemas):
+    """ Test schema contains the right information """
+    schemas_map  = vau.validate_schemas(load_bad_schemas)
+    assert vau.validate_schemas(schemas_map) is False
+
+def test_correct_main_key_schema_file(load_bad_schemas):
+    """ Test schema contains the right information """
+    schemas_map  = vau.validate_schemas(load_bad_schemas)
+    assert vau.validate_schemas(schemas_map) is False
+
+
 def test_find_schema_for_file(load_schemas, correct_ha_tsv):
     """ Test the correct schema is found for a file """
     sch  = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
@@ -90,15 +127,6 @@ def test_incorrect_find_schema_for_file(load_schemas, correct_ha_tsv):
     sch  = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
     
     assert sch['name'] not in ['pb2','pb1', 'm','na','np','ns','pa']
-
-
-def test_schema_file_correct():
-    """ Test schema contains the right information """
-    pass
-
-def test_handling_incorrect_schema_file():
-    """ Test how incorrect schema is hanled """
-    pass
 
 
 # Test dataframe validation
