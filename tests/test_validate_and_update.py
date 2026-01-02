@@ -52,13 +52,13 @@ def test_check_filename(failed_fn_tsv, caplog):
     
     caplog.set_level(logging.WARNING, logger=__name__)
 
-    # segs = ['pb2','pb1','ha','m','na','np','ns','pa']
+    segs = ['pb2','pb1','ha','m','na','np','ns','pa']
 
-    # vau.check_filename(failed_fn_tsv, segs)
+    vau.check_filename(failed_fn_tsv, segs)
 
-    # # Expected warning message
-    # warning_message = str("Input File %s did not start with a segment ID (%s). Skipped.",
-    #                     failed_fn_tsv, ", ".join(segs))
+    # Expected warning message
+    warning_message = str("Input File %s did not start with a segment ID (%s). Skipped.",
+                        failed_fn_tsv, ", ".join(segs))
 
     # # Assert warning was raised for inappropriate filename
     # assert any(
