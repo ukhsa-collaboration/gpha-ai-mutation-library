@@ -89,7 +89,7 @@ def test_incorrect_find_schema_for_file(load_schemas, correct_ha_tsv):
     """ Test the correct schema is found for a file """
     sch  = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
     
-    assert sch['name'] != 'pb1'
+    assert sch['name'] not in ['pb2','pb1', 'm','na','np','ns','pa']
 
 
 # Test dataframe validation
