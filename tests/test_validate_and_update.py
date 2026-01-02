@@ -65,7 +65,7 @@ def test_check_filename(failed_fn_tsv, caplog):
 
     # # Assert warning was raised for inappropriate filename
     assert any(
-            rec.levelno == logging.WARNING and warning_message in rec.message
+            rec.levelno == logging.WARNING and str(warning_message) in rec.message
             for rec in caplog.records
         )
 
