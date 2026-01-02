@@ -57,7 +57,11 @@ def test_check_filename(failed_fn_tsv, caplog):
     vau.check_filename(failed_fn_tsv, segs)
 
     # Expected warning message
-    warning_message = str("Input File %s did not start with a segment ID (%s). Skipped.", failed_fn_tsv, ", ".join(segs))
+    warning_message = logging.warning(
+        "Input File %s did not start with a segment ID (%s). Skipped.",
+        failed_fn_tsv, ", ".join(segs)
+    )
+
 
     # # Assert warning was raised for inappropriate filename
     assert any(
