@@ -125,9 +125,9 @@ def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[d
 def validate_schemas(schemas: Dict[str, dict]) -> None:
     """ Check that Schemas loaded are correctly formatted """
     # Load in schemas
-    print(schemas)
     # Check the approriate keys are loaded
-
+    for schema in schemas:
+        print(schema)
     # Check Primary keys are available
 
     # Check columns keys are present
