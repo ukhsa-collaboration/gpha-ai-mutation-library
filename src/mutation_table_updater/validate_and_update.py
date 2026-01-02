@@ -139,7 +139,8 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
             return False
         else:
             print(seg_dict['primary_key'])
-            print(seg_dict['columns'])
+            for column_dict in seg_dict['columns']:
+                print(column_dict)
             logging.info('Schema formatting check passed.')
             return True
         # 
