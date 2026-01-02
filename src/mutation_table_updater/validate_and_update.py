@@ -126,7 +126,7 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
     """ Check that Schemas loaded are correctly formatted """
     # Load in schemas
     # Check the approriate keys are loaded
-    expected_yaml_main_keys = ['name', 'filename', 'strict_columns', 'primary_key', 'columns']
+    expected_yaml_main_keys = set(['name', 'filename', 'strict_columns', 'primary_key', 'columns'])
 
 
     print('validating schemas')
@@ -136,7 +136,7 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
         print(seg_dict.keys())
         print(expected_yaml_main_keys)
         print(type(seg_dict))
-        missing = expected_yaml_main_keys - seg_dict.keys()
+        missing = expected_yaml_main_keys - set(seg_dict.keys())
         print(missing)
         if len(missing) > 0:
             logging.critical('Segment file %s was missing the essential keys %s. YAML should contain the following primary keys: %s',
