@@ -132,7 +132,7 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
     print('validating schemas')
     for segment in schemas:
         seg_dict = schemas[segment]
-        print(seg_dict)
+        print(seg_dict.keys)
         # for key in expected_yaml_main_keys:
         #     assert key in seg_dict, logging.warning(
         #         'Segment file missing expected key %s. Should contain the following primary keys: %s',
