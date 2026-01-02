@@ -126,7 +126,7 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
     """ Check that Schemas loaded are correctly formatted """
     # Load in schemas
     # Check the approriate keys are loaded
-    expected_yaml_main_keys = ['name', 'filname', 'strict_columns', 'primary_key', 'columns']
+    expected_yaml_main_keys = ['name', 'filename', 'strict_columns', 'primary_key', 'columns']
 
 
     print('validating schemas')
