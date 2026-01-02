@@ -69,6 +69,16 @@ def test_check_filename(failed_fn_tsv, caplog):
 
     assert check_fn_return is False
 
+def test_check_filename(failed_fn_tsv, caplog):
+    """ Test to check correct filename are handled correctly"""
+    # Capture warnings
+    
+    segs = ['pb2','pb1','ha','m','na','np','ns','pa']
+
+    check_fn_return = vau.check_filename(correct_ha_tsv, segs)
+
+    assert check_fn_return is True
+
 
 # Test dataframe validation
 """
