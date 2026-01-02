@@ -127,9 +127,12 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
     # Load in schemas
     # Check the approriate keys are loaded
     print('validating schemas')
-    print(schemas)
     for segment in schemas:
-        print(schemas[segment])
+        seg_dict = schemas[segment]
+        yaml_main_keys = seg_dict.keys()
+        print(yaml_main_keys)
+        
+
     # Check Primary keys are available
 
     # Check columns keys are present
