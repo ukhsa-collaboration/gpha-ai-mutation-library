@@ -79,6 +79,11 @@ def test_check_correct_filename(correct_ha_tsv):
 
     assert check_fn_return is True
 
+def test_find_schema_for_file(load_schemas, fp):
+    """ Test the correct schema is found for a file """
+    sch  = vau.find_schema_for_file(load_schemas, fp)
+    assert sch is str('ha_avian_influenza_mutation_table_gpha.yml')
+
 
 # Test dataframe validation
 """
