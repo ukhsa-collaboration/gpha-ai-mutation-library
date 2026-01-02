@@ -126,6 +126,7 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
     """ Check that Schemas loaded are correctly formatted """
     # Load in schemas
     # Check the approriate keys are loaded
+    print('validating schemas')
     for schema in schemas:
         print(schema)
     # Check Primary keys are available
