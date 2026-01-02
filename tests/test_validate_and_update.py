@@ -83,7 +83,7 @@ def test_find_schema_for_file(load_schemas, correct_ha_tsv):
     """ Test the correct schema is found for a file """
     sch  = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
     
-    assert sch['name'] is 'ha'
+    assert sch['name'] == 'ha'
 
 
 # Test dataframe validation
