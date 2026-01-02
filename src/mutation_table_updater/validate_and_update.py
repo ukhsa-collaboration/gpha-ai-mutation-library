@@ -139,7 +139,8 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
             logging.warning('Segment file %s was missing the essential keys %s. YAML should contain the following primary keys: %s',
                 segment, ", ".join(missing), ", ".join(expected_yaml_main_keys))
             return False
-        
+        else:
+            return True
         # 
         #     assert key in seg_dict, logging.warning(
         #         'Segment file missing expected key %s. Should contain the following primary keys: %s',
