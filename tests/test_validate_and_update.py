@@ -58,7 +58,7 @@ def test_check_filename(failed_fn_tsv, caplog):
 
     # Expected warning message
     warning_message = "Input File %s did not start with a segment ID (%s). Skipped." % (
-        failed_fn_tsv, ", ".join(segs)
+        Path(failed_fn_tsv).name, ", ".join(segs)
     )
 
 
