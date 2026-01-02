@@ -107,13 +107,13 @@ def test_check_correct_filename(correct_ha_tsv):
 
 def test_incorrect_main_key_schema_file(load_bad_schemas):
     """ Test schema contains the right information """
-    schemas_map  = vau.validate_schemas(load_bad_schemas)
-    assert schemas_map is False
+    schema_val_status  = vau.validate_schemas(load_bad_schemas)
+    assert schema_val_status is False
 
 def test_correct_main_key_schema_file(load_good_schemas):
     """ Test schema contains the right information """
-    schemas_map  = vau.validate_schemas(load_good_schemas)
-    assert schemas_map is True
+    schema_val_status  = vau.validate_schemas(load_good_schemas)
+    assert schema_val_status is True
 
 
 def test_find_schema_for_file(load_schemas, correct_ha_tsv):
