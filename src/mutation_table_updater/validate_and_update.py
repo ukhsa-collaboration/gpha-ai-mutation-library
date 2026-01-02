@@ -46,8 +46,17 @@ def setup_logging(log_filename, logging_level):
 
 
 # ---------- Helpers ----------
+
 def utc_now_iso() -> str:
-    return dt.datetime().isoformat(timespec="seconds") + "Z"
+    """
+    Returns an ISO 8601 UTC timestamp with seconds precision and a trailing 'Z'.
+    Example: '2026-01-02T10:47:00Z'
+    """
+    now = dt.datetime.now(dt.timezone.utc)  # tz-aware UTC datetime
+    # .isoformat(timespec="seconds") yields 'YYYY-MM-DDTHH:MM:SS+00:00' for tz-aware
+    # Convert '+00:00' to 'Z' for canonical UTC representation
+    return now.isoformat(timespec="seconds").replace("+00:00", "Z")
+
 
 def sha256_file(path: str) -> str:
     h = hashlib.sha256()
