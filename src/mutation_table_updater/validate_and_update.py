@@ -47,7 +47,7 @@ def setup_logging(log_filename, logging_level):
 
 # ---------- Helpers ----------
 def utc_now_iso() -> str:
-    return dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    return dt.datetime().isoformat(timespec="seconds") + "Z"
 
 def sha256_file(path: str) -> str:
     h = hashlib.sha256()
@@ -112,6 +112,18 @@ def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[d
         if key.startswith(seg):
             return sch
     return None
+
+def validate_schemas(schemas: Dict[str, dict]) -> None:
+    """ Check that Schemas loaded are correctly formatted """
+    # Load in schemas
+    print(schemas)
+    # Check the approriate keys are loaded
+
+    # Check Primary keys are available
+
+    # Check columns keys are present
+
+    pass
 
 # ---------- Validation primitives ----------
 def _type_check(series: pd.Series, typ: str) -> List[int]:

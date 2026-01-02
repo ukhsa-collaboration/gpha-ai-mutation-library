@@ -92,6 +92,15 @@ def test_incorrect_find_schema_for_file(load_schemas, correct_ha_tsv):
     assert sch['name'] not in ['pb2','pb1', 'm','na','np','ns','pa']
 
 
+def test_schema_file_correct():
+    """ Test schema contains the right information """
+    pass
+
+def test_handling_incorrect_schema_file():
+    """ Test how incorrect schema is hanled """
+    pass
+
+
 # Test dataframe validation
 """
 what am i trying to test?
