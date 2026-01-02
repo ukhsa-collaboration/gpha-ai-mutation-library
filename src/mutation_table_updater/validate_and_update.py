@@ -126,11 +126,14 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
     """ Check that Schemas loaded are correctly formatted """
     # Load in schemas
     # Check the approriate keys are loaded
+    expected_yaml_main_keys = ['name', 'filname', 'strict_columns', 'primary_key', 'columns']
+
+
     print('validating schemas')
     for segment in schemas:
         seg_dict = schemas[segment]
-        yaml_main_keys = seg_dict.keys()
-        print(yaml_main_keys)
+        for key in expected_yaml_main_keys:
+            assert key in seg_dict, logging.warning('Segment file missing expected key %s. Should contain the following primary keys: %s', key, expected_yaml_main_keys)
         
 
     # Check Primary keys are available
