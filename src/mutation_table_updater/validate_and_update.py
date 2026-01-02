@@ -128,8 +128,8 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
     # Check the approriate keys are loaded
     print('validating schemas')
     print(schemas)
-    for schema in schemas:
-        print(schema)
+    for segment in schemas:
+        print(schemas[segment])
     # Check Primary keys are available
 
     # Check columns keys are present
