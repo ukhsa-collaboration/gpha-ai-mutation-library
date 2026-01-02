@@ -69,7 +69,7 @@ def test_check_filename(failed_fn_tsv, caplog):
 
     assert check_fn_return is False
 
-def test_check_filename(failed_fn_tsv, caplog):
+def test_check_filename(correct_ha_tsv):
     """ Test to check correct filename are handled correctly"""
     # Capture warnings
     
