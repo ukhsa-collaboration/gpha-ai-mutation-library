@@ -39,7 +39,7 @@ def correct_ha_schema(load_schemas, correct_ha_tsv):
 @pytest.fixture
 def load_bad_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "bad_schemas/"
+    schemas_dir = SCRIPT_DIR / "bad_top_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
@@ -105,9 +105,18 @@ def test_check_correct_filename(correct_ha_tsv):
 
 #     pass
 
-def test_incorrect_main_key_schema_file(load_bad_schemas):
+def test_incorrect_main_key_schema_file(load_bad_schemas, caplog):
     """ Test schema contains the right information """
     schema_val_status  = vau.validate_schemas(load_bad_schemas)
+
+    # Expected warning message
+    warning_message = "Segment schema file ha was missing the following essential keys \"columns\". YAML should contain these essential keys: 'name', 'filename', 'strict_columns', 'primary_key', 'columns'"
+    
+    assert any(
+                rec.levelno == logging.CRITICAL and str(warning_message) in rec.message
+                for rec in caplog.records
+            )
+    
     assert schema_val_status is False
 
 def test_correct_main_key_schema_file(load_good_schemas):
