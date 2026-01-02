@@ -137,10 +137,12 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
             logging.critical('Segment file %s was missing the essential keys "%s". YAML should contain the following primary keys: %s',
                 segment, ", ".join(missing), ", ".join(expected_yaml_main_keys))
             return False
+        # Check primary keys are all present in 'columns'
         else:
-            print(seg_dict['primary_key'])
-            for column_dict in seg_dict['columns']:
-                print(column_dict)
+            primary_keys_list = seg_dict['primary_key']
+            column_names = [item['name'] for item in seg_dict['columns']]
+            print(primary_keys_list)
+            print(column_names)
             logging.info('Schema formatting check passed.')
             return True
         # 
