@@ -353,6 +353,9 @@ def main():
 
     schemas_map = load_schemas(args.schemas_dir)
 
+    validate_schemas(schemas_map)
+    breakpoint()
+
     segment_names = ['pb2','pb1','ha','m','na','np','ns','pa']
 
     # Validate all first
@@ -376,6 +379,8 @@ def main():
                 all_errors[f] = errs
             else:
                 validated.append((f, schema))
+
+            
 
         # If any file failed, print a grouped report and exit non-zero
         if len(validated) != len(files):
