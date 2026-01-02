@@ -54,14 +54,12 @@ def test_check_filename(failed_fn_tsv, caplog):
 
     segs = ['pb2','pb1','ha','m','na','np','ns','pa']
 
-    vau.check_filename(failed_fn_tsv, segs)
+    check_fn_return = vau.check_filename(failed_fn_tsv, segs)
 
     # Expected warning message
     warning_message = "Input File %s did not start with a segment ID (%s). Skipped." % (
         Path(failed_fn_tsv).name, ", ".join(segs)
     )
-
-
 
     # # Assert warning was raised for inappropriate filename
     assert any(
@@ -69,6 +67,7 @@ def test_check_filename(failed_fn_tsv, caplog):
             for rec in caplog.records
         )
 
+    assert check_fn_return is False
 
 
 # Test dataframe validation
