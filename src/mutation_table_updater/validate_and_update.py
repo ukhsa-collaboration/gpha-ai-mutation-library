@@ -133,6 +133,7 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
     for segment in schemas:
         seg_dict = schemas[segment]
         print(segment)
+        print(type(seg_dict))
         print(set(seg_dict.keys()))
         print('-------------END-------------')
         # for key in expected_yaml_main_keys:
