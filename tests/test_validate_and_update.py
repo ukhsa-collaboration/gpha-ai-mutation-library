@@ -110,10 +110,10 @@ def test_incorrect_main_key_schema_file(load_bad_schemas):
     schemas_map  = vau.validate_schemas(load_bad_schemas)
     assert vau.validate_schemas(schemas_map) is False
 
-def test_correct_main_key_schema_file(load_bad_schemas):
+def test_correct_main_key_schema_file(load_good_schemas):
     """ Test schema contains the right information """
     schemas_map  = vau.validate_schemas(load_bad_schemas)
-    assert vau.validate_schemas(schemas_map) is False
+    assert vau.validate_schemas(schemas_map) is True
 
 
 def test_find_schema_for_file(load_schemas, correct_ha_tsv):
