@@ -95,7 +95,7 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
     return schemas
 
 def check_filename(fn: str, seg_names: list) -> None:
-    ''' Check if filanem starts with segment, else fail gracefully.'''
+    ''' Check if filename starts with segment, else fail gracefully.'''
     filename =Path(fn).name
     if str(filename).startswith(tuple(seg_names)):
         return True
