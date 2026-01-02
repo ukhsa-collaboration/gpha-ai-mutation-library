@@ -46,7 +46,7 @@ def test_validate_dataframe(correct_ha_df, correct_ha_schema):
     errs = vau.validate_dataframe(correct_ha_df, correct_ha_schema)
     assert errs == []
 
-def test_check_filename(failed_fn_tsv):
+def test_check_filename(failed_fn_tsv, caplog):
     """ Test to check incorrect filename are handled correctly"""
     # Capture warnings
     
