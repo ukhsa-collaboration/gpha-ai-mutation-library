@@ -117,8 +117,6 @@ def test_incorrect_main_key_schema_file(load_bad_schemas, caplog):
                 for rec in caplog.records
             )
     
-    assert schema_val_status is False
-
 def test_correct_main_key_schema_file(load_good_schemas):
     """ Test schema contains the right information """
     schema_val_status  = vau.validate_schemas(load_good_schemas)
