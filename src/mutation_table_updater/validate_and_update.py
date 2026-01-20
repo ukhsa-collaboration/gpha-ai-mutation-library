@@ -148,6 +148,10 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
             print(primary_keys_list)
             print(column_names)
             print(missing)
+            if len(missing) > 0:
+                logging.critical('Segment schema file %s was missing the following essential keys "%s". YAML should contain these essential keys: %s',
+                    segment, ", ".join(missing), ", ".join(primary_keys_list))
+                return False
             logging.info('Schema formatting check passed.')
             return True
         # 
