@@ -110,7 +110,7 @@ def test_incorrect_main_key_schema_file(load_bad_schemas, caplog):
     schema_val_status  = vau.validate_schemas(load_bad_schemas)
 
     # Expected warning message
-    warning_message = 'Segment schema file ha was missing the following essential keys "columns". YAML should contain these essential keys: strict_columns, filename, primary_key, columns, name'
+    warning_message = 'Segment schema file ha was missing the following essential keys "columns". YAML should contain these essential keys: columns, primary_key, name, filename, strict_columns'
     
     assert any(
                 rec.levelno == logging.CRITICAL and str(warning_message) in rec.message
