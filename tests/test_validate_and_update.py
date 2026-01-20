@@ -30,6 +30,13 @@ def correct_ha_schema(load_schemas, correct_ha_tsv):
     return schema
 
 @pytest.fixture
+def load_schemas():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    schemas_dir = SCRIPT_DIR / "../schemas/"
+    schemas_map = vau.load_schemas(schemas_dir)
+    return schemas_map
+
+@pytest.fixture
 def load_bad_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_dir = SCRIPT_DIR / "schemas/bad_top_key_schema/"
