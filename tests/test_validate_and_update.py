@@ -32,28 +32,28 @@ def correct_ha_schema(load_schemas, correct_ha_tsv):
 @pytest.fixture
 def load_bad_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "/schemas/bad_top_key_schema/"
+    schemas_dir = SCRIPT_DIR / "schemas/bad_top_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
 @pytest.fixture
 def load_extra_colname_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "/schemas/extra_columns_key_schema/"
+    schemas_dir = SCRIPT_DIR / "schemas/extra_columns_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
 @pytest.fixture
 def load_missing_colname_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "/schemas/missing_columns_key_schema/"
+    schemas_dir = SCRIPT_DIR / "schemas/missing_columns_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
 @pytest.fixture
 def load_good_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "/schemas/good_schemas/"
+    schemas_dir = SCRIPT_DIR / "schemas/good_schemas/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
