@@ -20,13 +20,6 @@ def failed_fn_tsv():
     return failed_tsv_fp
 
 @pytest.fixture
-def load_schemas():
-    SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "../schemas/"
-    schemas_map = vau.load_schemas(schemas_dir)
-    return schemas_map
-
-@pytest.fixture
 def correct_ha_df(correct_ha_tsv):
     df = vau.read_table(correct_ha_tsv)
     return df
@@ -39,21 +32,28 @@ def correct_ha_schema(load_schemas, correct_ha_tsv):
 @pytest.fixture
 def load_bad_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "bad_top_key_schema/"
+    schemas_dir = SCRIPT_DIR / "/schemas/bad_top_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
 @pytest.fixture
-def load_bad_colname_schemas():
+def load_extra_colname_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "bad_columns_key_schema/"
+    schemas_dir = SCRIPT_DIR / "/schemas/extra_columns_key_schema/"
+    schemas_map = vau.load_schemas(schemas_dir)
+    return schemas_map
+
+@pytest.fixture
+def load_missing_colname_schemas():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    schemas_dir = SCRIPT_DIR / "/schemas/missing_columns_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
 @pytest.fixture
 def load_good_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "good_schemas/"
+    schemas_dir = SCRIPT_DIR / "/schemas/good_schemas/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
@@ -123,9 +123,20 @@ def test_incorrect_main_key_schema_file(load_bad_schemas, caplog):
     
     assert schema_val_status is False
 
-def test_extra_column_name_in_schema(load_bad_colname_schemas, caplog):
+def test_extra_column_name_in_schema(load_extra_colname_schemas, caplog):
     """ Test schema primary key contains all column names """
-    schema_val_status  = vau.validate_schemas(load_bad_colname_schemas)
+    schema_val_status  = vau.validate_schemas(load_extra_colname_schemas)
+
+    assert any(
+                rec.levelno == logging.CRITICAL
+                for rec in caplog.records
+            )
+    
+    assert schema_val_status is False
+
+def test_missing_column_name_in_schema(load_missing_colname_schemas, caplog):
+    """ Test schema primary key contains all column names """
+    schema_val_status  = vau.validate_schemas(load_missing_colname_schemas)
 
     assert any(
                 rec.levelno == logging.CRITICAL
