@@ -142,12 +142,11 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
             primary_keys_list = seg_dict['primary_key']
             column_names = [item['name'] for item in seg_dict['columns']]
             primary_key_dif = set(primary_keys_list) - set(column_names)
-            if len(primary_key_dif) > 0:
-                logging.critical('Segment schema file %s had differences between the following primary keys "%s" and column names "%s". Please make sure these are both the same.',
-                segment, ", ".join(missing), ", ".join(expected_yaml_main_keys))
+            
             print(f'primary_keys_list: {primary_keys_list}')
             print(f'column_names: {column_names}')
             print(f'primary_key_dif: {primary_key_dif}')
+            
             if len(primary_key_dif) > 0:
                 logging.critical('Segment schema file %s was missing the following essential keys "%s". YAML should contain these essential keys: %s',
                     segment, ", ".join(primary_key_dif), ", ".join(primary_keys_list))
