@@ -44,6 +44,13 @@ def load_bad_schemas():
     return schemas_map
 
 @pytest.fixture
+def load_bad_colname_schemas():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    schemas_dir = SCRIPT_DIR / "bad_columns_key_schema/"
+    schemas_map = vau.load_schemas(schemas_dir)
+    return schemas_map
+
+@pytest.fixture
 def load_good_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_dir = SCRIPT_DIR / "good_schemas/"
@@ -108,6 +115,17 @@ def test_check_correct_filename(correct_ha_tsv):
 def test_incorrect_main_key_schema_file(load_bad_schemas, caplog):
     """ Test schema contains the right information """
     schema_val_status  = vau.validate_schemas(load_bad_schemas)
+
+    assert any(
+                rec.levelno == logging.CRITICAL
+                for rec in caplog.records
+            )
+    
+    assert schema_val_status is False
+
+def test_extra_column_name_in_schema(load_bad_colname_schemas, caplog):
+    """ Test schema primary key contains all column names """
+    schema_val_status  = vau.validate_schemas(load_bad_colname_schemas)
 
     assert any(
                 rec.levelno == logging.CRITICAL
