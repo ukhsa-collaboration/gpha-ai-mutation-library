@@ -141,16 +141,19 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
         else:
             primary_keys_list = seg_dict['primary_key']
             column_names = [item['name'] for item in seg_dict['columns']]
-            primary_key_dif = set(primary_keys_list) - set(column_names)
             
-            print(f'primary_keys_list: {primary_keys_list}')
-            print(f'column_names: {column_names}')
-            print(f'primary_key_dif: {primary_key_dif}')
-            
-            if len(primary_key_dif) > 0:
-                logging.critical('Segment schema file %s was missing the following essential keys "%s". YAML should contain these essential keys: %s',
-                    segment, ", ".join(primary_key_dif), ", ".join(primary_keys_list))
+            primary_not_in_columns = set(primary_keys_list) - set(column_names)
+            columns_not_in_primary = set(column_names) - set(primary_keys_list)
+
+            if len(columns_not_in_primary) > 0:
+                logging.critical('Segment schema file %s has column names "%s" that are not included in primary keys "%s". Please check schema formatting.', 
+                                 segment, ", ".join(columns_not_in_primary), ", ".join(primary_keys_list))
                 return False
+            elif len(primary_not_in_columns) > 0:
+                logging.critical('Segment schema file %s has primary keys "%s" that are not included in column names "%s". Please check schema formatting.', 
+                                 segment, ", ".join(primary_not_in_columns), ", ".join(column_names))
+                return False
+        
             logging.info('Schema formatting check passed.')
             return True
         # 
