@@ -50,7 +50,7 @@ def dir_path(path):
     if os.path.isdir(path):
         return path
     else:
-        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory"
+        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory")
 
 def utc_now_iso() -> str:
     """
