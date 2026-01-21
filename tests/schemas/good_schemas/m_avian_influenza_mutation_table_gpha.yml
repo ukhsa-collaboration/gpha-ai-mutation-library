@@ -95,7 +95,7 @@ columns:
     type: str
     required: false
     allowed_values: ["Y", "N", Null]
-  - names: notes:
+  - names: notes
     type: str
     required: false
     
