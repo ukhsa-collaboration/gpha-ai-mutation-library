@@ -21,9 +21,9 @@ columns:
     allowed_values_file: "schemas/reference_lists/segment_list.txt"
   - name: position_met1
     type: int
-    required: true
+    required: False
   - name: position_N2
-    type: int
+    type: str
     required: true
   - name: ref_AA
     type: str

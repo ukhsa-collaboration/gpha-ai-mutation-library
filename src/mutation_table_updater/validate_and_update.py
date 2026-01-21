@@ -62,14 +62,12 @@ def utc_now_iso() -> str:
     # Convert '+00:00' to 'Z' for canonical UTC representation
     return now.isoformat(timespec="seconds").replace("+00:00", "Z")
 
-
 def sha256_file(path: str) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
     return h.hexdigest()
-
 
 def read_table(path: str) -> pd.DataFrame:
     ext = os.path.splitext(path)[1].lower()
