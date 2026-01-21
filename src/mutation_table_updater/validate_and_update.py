@@ -46,6 +46,11 @@ def setup_logging(log_filename, logging_level):
 
 
 # ---------- Helpers ----------
+def dir_path(path):
+    if os.path.isdir(path):
+        return path
+    else:
+        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory"
 
 def utc_now_iso() -> str:
     """
@@ -64,6 +69,7 @@ def sha256_file(path: str) -> str:
         for chunk in iter(lambda: f.read(8192), b""):
             h.update(chunk)
     return h.hexdigest()
+
 
 def read_table(path: str) -> pd.DataFrame:
     ext = os.path.splitext(path)[1].lower()
@@ -384,11 +390,14 @@ def archive_and_replace(validated_files: List[Tuple[str, dict]], tables_dir: str
 
 # ---------- Main ----------
 def main():
+    
+
+
     ap = argparse.ArgumentParser(description="Validate tables, then archive+replace if all pass.")
     ap.add_argument("--input", required=True, help="Path to a file OR a directory containing tables.")
-    ap.add_argument("--tables-dir", default=TABLES_DIR_DEFAULT)
-    ap.add_argument("--archive-dir", default=ARCHIVE_DIR_DEFAULT)
-    ap.add_argument("--schemas-dir", default=SCHEMAS_DIR_DEFAULT)
+    ap.add_argument("--tables-dir", type=dir_path,  default=TABLES_DIR_DEFAULT)
+    ap.add_argument("--archive-dir", type=dir_path,  default=ARCHIVE_DIR_DEFAULT)
+    ap.add_argument("--schemas-dir", type=dir_path,  default=SCHEMAS_DIR_DEFAULT)
     ap.add_argument("--log-file", default=LOG_FILE_DEFAULT)
     ap.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
     ap.add_argument("--user", default=os.getenv("USER", "unknown"))
