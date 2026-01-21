@@ -103,16 +103,6 @@ def load_schemas(schemas_dir: str) -> Dict[str, dict]:
             schemas[key] = schema
     return schemas
 
-def check_filename(fn: str, seg_names: list) -> None:
-    ''' Check if filename starts with segment, else fail gracefully.'''
-    filename =Path(fn).name
-    if str(filename).startswith(tuple(seg_names)):
-        return True
-    else:
-        logging.warning("Input File %s did not start with a segment ID (%s). Skipped.",
-                        filename, ", ".join(seg_names))
-        return False
-
 def find_schema_for_file(schemas: Dict[str, dict], file_path: str) -> Optional[dict]:
     base = os.path.basename(file_path)
     seg = str(base.split('_')[0])
@@ -156,6 +146,44 @@ def validate_schemas(schemas: Dict[str, dict]) -> None:
         
             logging.info('Schema formatting check passed.')
             return True
+
+def check_filename(fn: str, seg_names: list) -> None:
+    ''' Check if filename starts with segment, else fail gracefully.'''
+    filename = Path(fn).name
+    if str(filename).startswith(tuple(seg_names)):
+        return True
+    else:
+        logging.warning("Input File %s did not start with a segment ID (%s). Skipped.",
+                        filename, ", ".join(seg_names))
+        return False
+
+def map_schema_to_file(files: List[str], schemas: Dict[str, dict], segment_names: list) -> Tuple[Dict[str, dict], List[str]]:
+    """ Attach schema to each file based on filename matching. """
+
+    schema_file_map: Dict[str, dict] = {}
+    skipped_files = []
+
+    for f in files:
+        # check filename stats with segment ID
+        if check_filename(f, segment_names) is True:
+            schema = find_schema_for_file(schemas, f)
+            # If schema found, map it
+            if schema:
+                schema_file_map[f] = schema
+                logging.info("Mapped schema '%s' to file '%s'.", schema['name'], os.path.basename(f))
+            else:
+                logging.warning("No matching schema found for file '%s'.", os.path.basename(f))
+                skipped_files.append(f)   
+        else:
+            logging.warning("File %s skipped due to filename check failure.", os.path.basename(f))
+            skipped_files.append(f)
+    
+    if len(schema_file_map) >0:
+        logging.info("Schema mapping completed for %d files.", len(schema_file_map))
+        return schema_file_map, skipped_files
+    else:
+        logging.critical("No files were mapped to schemas. Please check input files and schema directory.")
+        sys.exit(1)
 
 
 # ---------- Validation primitives ----------
@@ -379,47 +407,16 @@ def main():
 
     if validate_schemas(schemas_map) is False:
         sys.exit()
-    breakpoint()
 
     segment_names = ['pb2','pb1','ha','m','na','np','ns','pa']
 
-    # Validate all first
-    validated: List[Tuple[str, dict]] = []
-    all_errors: Dict[str, List[str]] = {}
-    for f in files:
-        # check filename stats with segment ID
-        if check_filename(f, segment_names) is True:
-            schema = find_schema_for_file(schemas_map, f)
-            if not schema:
-                all_errors[f] = [f"No matching schema found in {args.schemas_dir} for file {os.path.basename(f)}"]
-                continue
-            try:
-                df = read_table(f)
-            except Exception as e:
-                all_errors[f] = [f"Failed to read table: {e}"]
-                continue
+    # Map schema to input files
+    schema_file_map, skipped_files = map_schema_to_file(files, schemas_map, segment_names)
 
-            errs = validate_dataframe(df, schema)
-            if errs:
-                all_errors[f] = errs
-            else:
-                validated.append((f, schema))
 
-            
-
-        # If any file failed, print a grouped report and exit non-zero
-        if len(validated) != len(files):
-            print("Validation failed for one or more files:\n", file=sys.stderr)
-            for f, errs in all_errors.items():
-                if errs:
-                    print(f"--- {f} ---", file=sys.stderr)
-                    for e in errs:
-                        print(f"  * {e}", file=sys.stderr)
-            sys.exit(1)
-
-        # All good → archive + replace
-        archive_and_replace(validated, args.tables_dir, args.archive_dir, args.user, args.log_file)
-        print(f"Success. {len(validated)} table(s) validated and updated.\nLog: {args.log_file}")
+    # # All good → archive + replace
+    # archive_and_replace(validated, args.tables_dir, args.archive_dir, args.user, args.log_file)
+    # print(f"Success. {len(validated)} table(s) validated and updated.\nLog: {args.log_file}")
 
 if __name__ == "__main__":
     main()
