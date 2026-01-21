@@ -270,13 +270,3 @@ single			HA	410	394	393	K	E		H7N9		Decreased HA stability	stability			decrease		
 single			HA	410	394	393	K	E		H7N9		Decreased virulence in mice	virulence			decrease			literature	https://doi.org/10.1016/j.virol.2019.07.012 	31325838		Y	
 single			HA	451	435		E	K		H5N1		Decreased pH of fusion	fusion_ph			decrease			literature	https://doi.org/10.1128/JVI.02238-08	19193808			Y
 single			HA	460	444		N	K		H5N1		Increased pH of fusion 	fusion_ph			increase			literature	https://doi.org/10.1128/JVI.02238-08	19193808			Y
-combination	HA:L129V-HA:A134V	HA:L129V-HA:A134V:1	HA		129	∆c	L	V		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1128/JVI.00468-07 	17626098		Y	
-combination	HA:L129del-HA:I151T	HA:L129del-HA:I151T:1	HA		129	∆	L	del		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1371/journal.ppat.1002068 	21637809		Y	
-single	HA:R467Q		HA		467		R	Q	R467Q	H4N1		improved binding to human alpha 2,6 sialic acid receptors				increase	mammalian	human	literature	https://doi.org/10.1186/s12985-025-02736-4	40251629			
-combination	HA:E75K-HA:S123-HA:R497K	HA:E75K-HA:S123-HA:R497K:3	HA		497	496	R	K		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1038/nature05264 	17108965		Y	
-combination	HA:E75K-HA:S123P-HA:N193K-HA:R497K	HA:E75K-HA:S123P-HA:N193K-HA:R497K:4	HA		497	496	R	K		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1038/nature05264 	17108965		Y	
-combination	HA:E75K-HA:N193K-HA:R497K	HA:E75K-HA:N193K-HA:R497K:3	HA		497	496	R	K		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1038/nature05264 	17108965		Y	
-combination	HA:E75K-HA:R497K	HA:E75K-HA:R497K:2	HA		497	496	R	K		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1038/nature05264 	17108965		Y	
-combination	HA:S123P-HA:N193K-HA:R497K	HA:S123P-HA:N193K-HA:R497K:3	HA		497	496	R	K		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1038/nature05264 	17108965		Y	
-combination	HA:S123P-HA:R497K	HA:S123P-HA:R497K:2	HA		497	496	R	K		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1038/nature05264 	17108965		Y	
-combination	HA:N193K-HA:R497K	HA:N193K-HA:R497K:2	HA		497	496	R	K		H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase			literature	https://doi.org/10.1038/nature05264	17108965		Y	
