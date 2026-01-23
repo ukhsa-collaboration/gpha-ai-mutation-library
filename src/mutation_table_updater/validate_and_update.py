@@ -73,7 +73,7 @@ def sha256_file(path: str) -> str:
 
 
 def read_table(path: str) -> pd.DataFrame:
-    ext = Path.splitext(path)[1].lower()
+    ext = Path(path).suffix
     if ext in [".csv"]:
         return pd.read_csv(path)
     elif ext in [".tsv", ".tab"]:
@@ -102,7 +102,7 @@ def list_candidate_files(input_path: str) -> list[str]:
 def load_schemas(schemas_dir: str) -> dict[str, dict]:
     schemas = {}
     for fn in pathlib.Path.iterdir(schemas_dir):
-        if fn.lower().endswith((".yml", ".yaml")):
+        if str(fn).lower().endswith((".yml", ".yaml")):
             with Path.open(Path(schemas_dir) / fn, "r", encoding="utf-8") as f:
                 schema = yaml.safe_load(f)
             # Index by canonical filename (preferred) or table name
