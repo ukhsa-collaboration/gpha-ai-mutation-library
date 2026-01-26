@@ -158,6 +158,7 @@ def validate_schemas(schemas: dict[str, dict]) -> None:
                     ", ".join(columns_not_in_primary),
                     ", ".join(primary_keys_list),
                 )
+                return False
             elif len(primary_not_in_columns) > 0:
                 logging.critical(
                     'Segment schema file %s has primary keys "%s" that are not '
@@ -166,7 +167,6 @@ def validate_schemas(schemas: dict[str, dict]) -> None:
                     ", ".join(primary_not_in_columns),
                     ", ".join(column_names),
                 )
-                return False
                 return False
 
             logging.info("Schema formatting check passed.")

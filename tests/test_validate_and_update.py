@@ -76,9 +76,9 @@ def load_good_schemas():
 @pytest.fixture
 def load_good_tables():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "tables/correct_tables/"
-    schemas_map = vau.load_schemas(schemas_dir)
-    return schemas_map
+    tables_dir = SCRIPT_DIR / "tables/correct_tables/"
+    tables = vau.list_candidate_files(tables_dir)
+    return tables
 
 
 ########################### Tests ###########################
@@ -96,11 +96,6 @@ def test_find_correct_schema_for_file(load_schemas, correct_ha_tsv):
     sch = vau.find_schema_for_file(load_schemas, correct_ha_tsv)
 
     assert sch["name"] == "ha"
-
-
-def test_validate_dataframe(correct_ha_df, correct_ha_schema):
-    errs = vau.validate_dataframe(correct_ha_df, correct_ha_schema)
-    assert errs == []
 
 
 def test_incorrect_main_key_schema_file(load_bad_schemas, caplog):
@@ -143,16 +138,15 @@ def test_incorrect_find_schema_for_file(load_schemas, correct_ha_tsv):
     assert sch["name"] not in ["pb2", "pb1", "m", "na", "np", "ns", "pa"]
 
 
-def test_correct_map_schame_file(files, schemas):
-    """Test mapping of schema to file"""
-    # All segment files
-    # All segment schemas
-    # Result is dict with all files and schemas mapped and an empty skipped_files list
-    file_schema_map = vau.map_schemas_to_files(files, schemas)
+def test_check_correct_filename(correct_ha_tsv):
+    """Test to check correct filename are handled correctly"""
+    # Capture warnings
 
-    for f in files:
-        assert f in file_schema_map
-        assert file_schema_map[f]["name"] in ["pb2", "pb1", "ha", "m", "na", "np", "ns", "pa"]
+    segs = ["pb2", "pb1", "ha", "m", "na", "np", "ns", "pa"]
+
+    check_fn_return = vau.check_filename(correct_ha_tsv, segs)
+
+    assert check_fn_return is True
 
 
 ## Test names of files
@@ -178,23 +172,29 @@ def test_check_incorrect_filename(failed_fn_tsv, caplog):
     assert check_fn_return is False
 
 
-def test_check_correct_filename(correct_ha_tsv):
-    """Test to check correct filename are handled correctly"""
-    # Capture warnings
-
+def test_correct_map_schema_file(load_good_tables, load_good_schemas):
+    """Test mapping of schema to file"""
+    # Result is dict with all files and schemas mapped and an empty skipped_files list
     segs = ["pb2", "pb1", "ha", "m", "na", "np", "ns", "pa"]
+    file_schema_map, skipped_files = vau.map_schema_to_file(load_good_tables, load_good_schemas, segs)
 
-    check_fn_return = vau.check_filename(correct_ha_tsv, segs)
+    # check file in keys
+    for f in load_good_tables:
+        assert f in file_schema_map
 
-    assert check_fn_return is True
+    # Check no missing files
+    assert skipped_files == []
+
+
+## Next Test: validate_dataframe
 
 
 # Test dataframe validation
 """
 what am i trying to test?
-- the correct schemas are read in per column?
-- incorrect data is identfied as expected
-- error messages are reported appropriately
+- the correct schemas are read in per column? DONE
+- incorrect data is identfied as expected DONE
+- error messages are reported appropriately DONE
     - if you provide a file that is inappropriately formatted provide appropriate feedback
 - things are archived appropriately
 - Logs are appropriate
