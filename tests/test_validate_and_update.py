@@ -81,6 +81,14 @@ def load_good_tables():
     return tables
 
 
+@pytest.fixture
+def table_missing_req_col():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_missing_required_column.tsv"
+    df = vau.read_table(tsv_fp)
+    return df
+
+
 ########################### Tests ###########################
 
 
@@ -187,6 +195,35 @@ def test_correct_map_schema_file(load_good_tables, load_good_schemas):
 
 
 ## Next Test: validate_dataframe
+# Required columns
+def test_missing_required_column(table_missing_req_col, correct_ha_schema):
+    """Test missing required column is identified"""
+    df = table_missing_req_col
+    schema = correct_ha_schema
+
+    errors = vau.validate_dataframe(df, schema)
+
+    # Check error message for missing required column
+    expected_error_msg = "Missing required column: feature_type"
+
+    assert expected_error_msg in errors
+
+
+# Per ccolumn checks
+
+# Required non-Null
+
+# Type Check
+
+# Regex Check
+
+# Allowed Values (inline)
+
+# Allowed Values (external file)
+
+# Numeric Range
+
+# Primary key uniqueness
 
 
 # Test dataframe validation

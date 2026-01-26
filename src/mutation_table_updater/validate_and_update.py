@@ -103,7 +103,7 @@ def load_schemas(schemas_dir: str) -> dict[str, dict]:
     schemas = {}
     for fn in Path(schemas_dir).iterdir():
         if str(fn).lower().endswith((".yml", ".yaml")):
-            with Path.open(Path(schemas_dir) / fn, "r", encoding="utf-8") as f:
+            with Path.open(fn, "r", encoding="utf-8") as f:
                 schema = yaml.safe_load(f)
             # Index by canonical filename (preferred) or table name
             key = schema.get("name")
