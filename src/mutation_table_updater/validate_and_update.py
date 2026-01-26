@@ -101,7 +101,7 @@ def list_candidate_files(input_path: str) -> list[str]:
 
 def load_schemas(schemas_dir: str) -> dict[str, dict]:
     schemas = {}
-    for fn in pathlib.Path.iterdir(schemas_dir):
+    for fn in Path(schemas_dir).iterdir():
         if str(fn).lower().endswith((".yml", ".yaml")):
             with Path.open(Path(schemas_dir) / fn, "r", encoding="utf-8") as f:
                 schema = yaml.safe_load(f)
@@ -251,17 +251,23 @@ def _type_check(series: pd.Series, typ: str) -> list[int]:
     return failures
 
 
+# column rules
+def required_columns(df: pd.DataFrame, schema: dict) -> str:
+    required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
+    for col in required_cols:
+        if col not in df.columns:
+            error = f"Missing required column: {col}"
+            return error
+
+
 def validate_dataframe(df: pd.DataFrame, schema: dict) -> list[str]:
     """
     Return list of human-readable validation error messages.
     """
     errors: list[str] = []
-
     # Required columns
-    required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
-    for col in required_cols:
-        if col not in df.columns:
-            errors.append(f"Missing required column: {col}")
+    required_column_error = required_columns(df, schema)
+    errors.append(required_column_error)
 
     # Unexpected columns (optional strict mode)
     allowed_cols = [c["name"] for c in schema.get("columns", [])]
