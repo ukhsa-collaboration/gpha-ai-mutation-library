@@ -1,0 +1,4 @@
+2026-01-26 08:38:50,310 | root | INFO     | Checking Schema formats are correct.
+2026-01-26 08:38:50,310 | root | INFO     | Schema formatting check passed.
+2026-01-26 08:38:50,310 | root | INFO     | Mapped schema 'ha' to file 'ha_avian_influenza_mutation_table_gpha_missing_required_column.tsv'.
+2026-01-26 08:38:50,311 | root | INFO     | Schema mapping completed for 1 files.
