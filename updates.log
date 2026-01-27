@@ -1,4 +1,9 @@
-2026-01-26 08:38:50,310 | root | INFO     | Checking Schema formats are correct.
-2026-01-26 08:38:50,310 | root | INFO     | Schema formatting check passed.
-2026-01-26 08:38:50,310 | root | INFO     | Mapped schema 'ha' to file 'ha_avian_influenza_mutation_table_gpha_missing_required_column.tsv'.
-2026-01-26 08:38:50,311 | root | INFO     | Schema mapping completed for 1 files.
+2026-01-27 07:49:25,118 | root | INFO     | Checking Schema formats are correct.
+2026-01-27 07:49:25,118 | root | INFO     | Schema formatting check passed.
+2026-01-27 07:49:25,119 | root | INFO     | Mapped schema 'ha' to file 'ha_avian_influenza_mutation_table_gpha_incorrect_pheno_value.tsv'.
+2026-01-27 07:49:25,119 | root | INFO     | Schema mapping completed for 1 files.
+2026-01-27 07:49:25,120 | root | INFO     | Validating table ha_avian_influenza_mutation_table_gpha_incorrect_pheno_value.tsv against schema ha.
+2026-01-27 07:49:25,140 | root | INFO     | Checking regex for column name with pattern ^[A-Z][0-9]+[A-Z][0-9]$
+2026-01-27 07:49:25,140 | root | INFO     | Checking regex for column subtype_tested with pattern ^H[0-9]+N[0-9]+$
+2026-01-27 07:49:25,144 | root | CRITICAL | phenotypic_category: 1 row(s) contain values not present in the reference file (check schemas/reference_lists/).
+2026-01-27 07:49:25,144 | root | CRITICAL | Incorrect values: incorrect_value

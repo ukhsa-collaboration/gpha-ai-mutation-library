@@ -251,75 +251,94 @@ def _type_check(series: pd.Series, typ: str) -> list[int]:
     return failures
 
 
-# column rules
-def required_columns(df: pd.DataFrame, schema: dict) -> str:
-    required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
-    for col in required_cols:
-        if col not in df.columns:
-            error = f"Missing required column: {col}"
+def validate_single_dataframe(df, schema) -> list[str]:
+    errors: list[str] = []
+
+    script_dir = Path(sys.argv[0]).resolve().parent
+
+    # column rules
+    def required_columns(df: pd.DataFrame, schema: dict) -> str:
+        required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
+        missing_cols = []
+        for col in required_cols:
+            if col not in df.columns:
+                missing_cols.append(col)
+        if len(missing_cols) > 0:
+            error = f"Missing required column: {', '.join(missing_cols)}"
+            logging.warning(error)
             return error
 
+    def unexpected_columns(df: pd.DataFrame, schema: dict) -> str:
+        allowed_cols = [c["name"] for c in schema.get("columns", [])]
+        if schema.get("strict_columns", True):
+            extra = sorted(set(df.columns) - set(allowed_cols))
+            if extra:
+                error = f"Unexpected columns present: {', '.join(extra)}"
+                logging.warning(error)
+                return error
 
-def validate_dataframe(df: pd.DataFrame, schema: dict) -> list[str]:
-    """
-    Return list of human-readable validation error messages.
-    """
-    errors: list[str] = []
+    # Columns that require non-null values
+    def required_values(df, col) -> str:
+        series = df[col]
+        null_idx = list(series[series.isna()].index)
+        if null_idx:
+            error = f"{col}: {len(null_idx)} required values are null"
+            logging.critical(error)
+            return error
+
     # Required columns
     required_column_error = required_columns(df, schema)
     errors.append(required_column_error)
 
     # Unexpected columns (optional strict mode)
-    allowed_cols = [c["name"] for c in schema.get("columns", [])]
-    if schema.get("strict_columns", True):
-        extra = sorted(set(df.columns) - set(allowed_cols))
-        if extra:
-            errors.append(f"Unexpected columns present: {extra}")
+    unexpected_column_error = unexpected_columns(df, schema)
+    errors.append(unexpected_column_error)
 
     # Per-column checks
     for col_rule in schema.get("columns", []):
         col = col_rule["name"]
+        series = df[col]
         if col not in df.columns:
             # Already flagged if required; skip otherwise
             continue
-        series = df[col]
-
-        # Required non-null
-        if col_rule.get("required"):
-            null_idx = list(series[series.isna()].index)
-            if null_idx:
-                errors.append(f"{col}: {len(null_idx)} required values are null")
-
         # Type checks
+        # Ensure columns which expect values are not null/empty
+        if col_rule.get("required"):
+            required_value_error = required_values(df, col)
+            errors.append(required_value_error)
+
         if "type" in col_rule:
             bad_idx = _type_check(series, col_rule["type"])
             if bad_idx:
-                errors.append(f"{col}: {len(bad_idx)} rows fail type '{col_rule['type']}'")
+                error = f"{col}: {len(bad_idx)} rows fail type '{col_rule['type']}'"
+                logging.critical(error)
+                errors.append(error)
 
         # Regex
         if "pattern" in col_rule:
             reg = re.compile(col_rule["pattern"])
+            logging.info("Checking regex for column %s with pattern %s", col, col_rule["pattern"])
             bad_rows = [i for i, v in series.items() if not (pd.isna(v) or reg.match(str(v)))]
             if bad_rows:
-                errors.append(f"{col}: {len(bad_rows)} rows fail regex '{col_rule['pattern']}'")
+                error = f"{col}: {len(bad_rows)} rows fail regex '{col_rule['pattern']}'"
+                logging.critical(error)
+                errors.append(error)
 
         # Allowed values (inline)
-        if "allowed_values" in col_rule:
-            allowed = set(col_rule["allowed_values"])
-            bad_rows = [i for i, v in series.items() if not (pd.isna(v) or str(v) in allowed)]
-            if bad_rows:
-                errors.append(f"{col}: {len(bad_rows)} rows not in allowed_values")
-
-        # Allowed values (external file)
         if "allowed_values_file" in col_rule:
-            fpath = col_rule["allowed_values_file"]
+            fpath = Path.cwd() / col_rule["allowed_values_file"]
             with Path.open(fpath, "r", encoding="utf-8") as f:
-                allowed = {line.strip() for line in f if line.strip()}
-            bad_rows = [i for i, v in series.items() if not (pd.isna(v) or str(v) in allowed)]
-            if bad_rows:
-                errors.append(f"{col}: {len(bad_rows)} rows not in allowed_values_file={fpath}")
+                allowed = {line.strip().lower() for line in f if line.strip()}
+            col_lower = df[col].astype("string").str.lower()
+            not_allowed = df[~col_lower.isin(allowed)]
+            if not not_allowed.empty:
+                incorrect_values = col_lower.tolist()
+                error = f"{col}: {len(not_allowed)} row(s) contain values not present in the reference file (check schemas/reference_lists/)."
+                logging.critical(error)
+                logging.critical("Incorrect values: %s", ", ".join(map(str, incorrect_values)))
+                errors.append(error)
 
-        # Numeric range
+        #     # Numeric range
         if col_rule.get("type") in ("int", "float"):
             lo = col_rule.get("min")
             hi = col_rule.get("max")
@@ -332,36 +351,53 @@ def validate_dataframe(df: pd.DataFrame, schema: dict) -> list[str]:
                 if bad_rows:
                     errors.append(f"{col}: {len(bad_rows)} values > {hi}")
 
-    # Primary key uniqueness
-    pk = schema.get("primary_key")
-    if pk:
-        dup_mask = df.duplicated(subset=pk, keep=False)
-        dup_count = int(dup_mask.sum())
-        if dup_count:
-            errors.append(f"Primary key {pk} has {dup_count} duplicate rows")
+    # # Primary key uniqueness
+    # pk = schema.get("primary_key")
+    # if pk:
+    #     dup_mask = df.duplicated(subset=pk, keep=False)
+    #     dup_count = int(dup_mask.sum())
+    #     if dup_count:
+    #         errors.append(f"Primary key {pk} has {dup_count} duplicate rows")
 
-    # Foreign keys (referential integrity)
-    # Format example:
-    # foreign_keys:
-    #   - column: gene
-    #     ref_table: genes.csv
-    #     ref_column: gene
-    for fk in schema.get("foreign_keys", []):
-        col = fk["column"]
-        ref_table = fk["ref_table"]
-        ref_col = fk["ref_column"]
-        # Load reference quickly from tables/
-        ref_path = str(Path(TABLES_DIR_DEFAULT) / ref_table)
-        if not Path.exists(ref_path):
-            errors.append(f"Foreign key reference table not found: {ref_table}")
-        else:
-            ref_df = read_table(ref_path)
-            allowed = set(ref_df[ref_col].astype(str))
-            bad = df[~df[col].astype(str).isin(allowed)][col]
-            if len(bad) > 0:
-                errors.append(f"Foreign key violation on {col}: {len(bad)} values not in {ref_table}.{ref_col}")
+    # # Foreign keys (referential integrity)
+    # # Format example:
+    # # foreign_keys:
+    # #   - column: gene
+    # #     ref_table: genes.csv
+    # #     ref_column: gene
+    # for fk in schema.get("foreign_keys", []):
+    #     col = fk["column"]
+    #     ref_table = fk["ref_table"]
+    #     ref_col = fk["ref_column"]
+    #     # Load reference quickly from tables/
+    #     ref_path = str(Path(TABLES_DIR_DEFAULT) / ref_table)
+    #     if not Path.exists(ref_path):
+    #         errors.append(f"Foreign key reference table not found: {ref_table}")
+    #     else:
+    #         ref_df = read_table(ref_path)
+    #         allowed = set(ref_df[ref_col].astype(str))
+    #         bad = df[~df[col].astype(str).isin(allowed)][col]
+    #         if len(bad) > 0:
+    #             errors.append(f"Foreign key violation on {col}: {len(bad)} values not in {ref_table}.{ref_col}")
 
     return errors
+
+
+def validate_dataframes(schema_file_map: dict) -> list[str]:
+    """
+    Return list of human-readable validation error messages.
+    """
+    for mut_table_fp, schema in schema_file_map.items():
+        logging.info("Validating table %s against schema %s.", Path(mut_table_fp).name, schema["name"])
+        df = read_table(mut_table_fp)
+
+        table_errors = validate_single_dataframe(df, schema)
+        # if table_errors:
+        #     for err in table_errors:
+        #         logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
+        #     errors.extend(table_errors)
+        # else:
+        #     logging.info("Table %s passed validation.", Path(mut_table_fp).name)
 
 
 # ---------- Archiving & Replacement ----------
@@ -451,6 +487,9 @@ def main():
 
     # Map schema to input files
     schema_file_map, skipped_files = map_schema_to_file(files, schemas_map, segment_names)
+
+    # Validate tables with schemas
+    validate_dataframes(schema_file_map)
 
     # # All good → archive + replace
     # archive_and_replace(validated, args.tables_dir, args.archive_dir, args.user, args.log_file)
