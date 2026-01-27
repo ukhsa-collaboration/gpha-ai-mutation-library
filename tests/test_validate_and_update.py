@@ -36,7 +36,7 @@ def correct_ha_schema(load_schemas, correct_ha_tsv):
 @pytest.fixture
 def load_schemas():
     SCRIPT_DIR = Path(__file__).resolve().parent
-    schemas_dir = SCRIPT_DIR / "../schemas/"
+    schemas_dir = SCRIPT_DIR / "schemas/good_schemas/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
 
@@ -133,6 +133,22 @@ def allowed_aa_values_error():
 def allowed_phenotypes_values_error():
     SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_incorrect_pheno_value.tsv"
+    df = vau.read_table(tsv_fp)
+    return df
+
+
+@pytest.fixture
+def oob_met1_position_error():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_oob_met1_position.tsv"
+    df = vau.read_table(tsv_fp)
+    return df
+
+
+@pytest.fixture
+def oob_met1_min_position_error():
+    SCRIPT_DIR = Path(__file__).resolve().parent
+    tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_oob_met1_low_position.tsv"
     df = vau.read_table(tsv_fp)
     return df
 
@@ -242,10 +258,6 @@ def test_correct_map_schema_file(load_good_tables, load_good_schemas):
     assert skipped_files == []
 
 
-## Next Test: validate_dataframe
-# Required columns
-
-
 # Per ccolumn checks
 def test_unexpected_column(table_unexpected_col, correct_ha_schema):
     """Test unexpected column is identified"""
@@ -310,8 +322,6 @@ def test_regex_subtype_pattern_check(subtype_pattern_error, correct_ha_schema):
 
 
 # Allowed Values (external file)
-
-
 def test_allowed_aa_values_check(allowed_aa_values_error, correct_ha_schema):
     """Test allowed values are used in column"""
     df = allowed_aa_values_error
@@ -333,27 +343,46 @@ def test_allowed_pheno_values_check(allowed_phenotypes_values_error, correct_ha_
 
     errors = vau.validate_single_dataframe(df, schema)
 
-    expected_error_msg = (
-        "host_type: 1 row(s) contain values not present in the reference file (check schemas/reference_lists/)."
-    )
+    expected_error_msg = "phenotypic_category: 1 row(s) contain values not present in the reference file (check schemas/reference_lists/)."
 
     assert expected_error_msg in errors
 
 
 # Allowed Values (inline)
+def test_oob_high_int_check(oob_met1_position_error, correct_ha_schema):
+    """Test out-of-bounds values are identified"""
+    df = oob_met1_position_error
+    schema = correct_ha_schema
 
-# Numeric Range
+    errors = vau.validate_single_dataframe(df, schema)
 
-# Primary key uniqueness
+    expected_error_msg = "Value outside bounds (1 - 568) for column 'position_met1'. check values: [999]"
+
+    assert expected_error_msg in errors
+
+
+def test_oob_low_int_check(oob_met1_min_position_error, correct_ha_schema):
+    """Test out-of-bounds values are identified"""
+    df = oob_met1_min_position_error
+    schema = correct_ha_schema
+
+    errors = vau.validate_single_dataframe(df, schema)
+
+    expected_error_msg = "Value outside bounds (1 - 568) for column 'position_met1'. check values: [0]"
+
+    assert expected_error_msg in errors
+
+
+def test_correct_ha_table_validation(correct_ha_df, correct_ha_schema):
+    df = correct_ha_df
+    schema = correct_ha_schema
+    errors = vau.validate_single_dataframe(df, schema)
+    assert errors == []
 
 
 # Test dataframe validation
 """
 what am i trying to test?
-- the correct schemas are read in per column? DONE
-- incorrect data is identfied as expected DONE
-- error messages are reported appropriately DONE
-    - if you provide a file that is inappropriately formatted provide appropriate feedback
 - things are archived appropriately
 - Logs are appropriate
 

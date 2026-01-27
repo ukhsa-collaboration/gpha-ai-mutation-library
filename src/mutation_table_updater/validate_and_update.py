@@ -254,8 +254,6 @@ def _type_check(series: pd.Series, typ: str) -> list[int]:
 def validate_single_dataframe(df, schema) -> list[str]:
     errors: list[str] = []
 
-    script_dir = Path(sys.argv[0]).resolve().parent
-
     # column rules
     def required_columns(df: pd.DataFrame, schema: dict) -> str:
         required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
@@ -335,78 +333,139 @@ def validate_single_dataframe(df, schema) -> list[str]:
                 incorrect_values = col_lower.tolist()
                 error = f"{col}: {len(not_allowed)} row(s) contain values not present in the reference file (check schemas/reference_lists/)."
                 logging.critical(error)
-                logging.critical("Incorrect values: %s", ", ".join(map(str, incorrect_values)))
+                logging.critical("Incorrect value(s): %s", ", ".join(map(str, incorrect_values)))
                 errors.append(error)
 
-        #     # Numeric range
-        if col_rule.get("type") in ("int", "float"):
+        # Numeric range
+        if (col_rule.get("type") in ("int", "float")) and (col_rule.get("min") and col_rule.get("max")):
             lo = col_rule.get("min")
             hi = col_rule.get("max")
-            if lo is not None:
-                bad_rows = list(df.index[pd.to_numeric(series, errors="coerce") < lo])
-                if bad_rows:
-                    errors.append(f"{col}: {len(bad_rows)} values < {lo}")
-            if hi is not None:
-                bad_rows = list(df.index[pd.to_numeric(series, errors="coerce") > hi])
-                if bad_rows:
-                    errors.append(f"{col}: {len(bad_rows)} values > {hi}")
+            values = df[col_rule["name"]].tolist()
+            if all(isinstance(x, (int, float)) for x in values):
+                # convert all values to float for simplicity
+                if (lo is not None) & (hi is not None):
+                    less_than = [x for x in values if x < lo]
+                    greater_than = [x for x in values if x > hi]
+                    if len(greater_than) > 0 or len(less_than) > 0:
+                        error = f"Value outside bounds ({lo} - {hi}) for column '{col}'. check values: {values}"
+                        logging.critical(error)
+                        errors.append(error)
+            else:
+                error = f"Non-numeric value found in numeric range check for column '{col}'."
+                logging.critical(error)
+                errors.append(error)
 
-    # # Primary key uniqueness
-    # pk = schema.get("primary_key")
-    # if pk:
-    #     dup_mask = df.duplicated(subset=pk, keep=False)
-    #     dup_count = int(dup_mask.sum())
-    #     if dup_count:
-    #         errors.append(f"Primary key {pk} has {dup_count} duplicate rows")
-
-    # # Foreign keys (referential integrity)
-    # # Format example:
-    # # foreign_keys:
-    # #   - column: gene
-    # #     ref_table: genes.csv
-    # #     ref_column: gene
-    # for fk in schema.get("foreign_keys", []):
-    #     col = fk["column"]
-    #     ref_table = fk["ref_table"]
-    #     ref_col = fk["ref_column"]
-    #     # Load reference quickly from tables/
-    #     ref_path = str(Path(TABLES_DIR_DEFAULT) / ref_table)
-    #     if not Path.exists(ref_path):
-    #         errors.append(f"Foreign key reference table not found: {ref_table}")
-    #     else:
-    #         ref_df = read_table(ref_path)
-    #         allowed = set(ref_df[ref_col].astype(str))
-    #         bad = df[~df[col].astype(str).isin(allowed)][col]
-    #         if len(bad) > 0:
-    #             errors.append(f"Foreign key violation on {col}: {len(bad)} values not in {ref_table}.{ref_col}")
-
+    errors = [x for x in errors if x is not None]
     return errors
 
 
-def validate_dataframes(schema_file_map: dict) -> list[str]:
+def validate_dataframes(schema_file_map: dict) -> list[dict]:
     """
     Return list of human-readable validation error messages.
     """
+    dataframes_status_dict_list = []
     for mut_table_fp, schema in schema_file_map.items():
         logging.info("Validating table %s against schema %s.", Path(mut_table_fp).name, schema["name"])
         df = read_table(mut_table_fp)
 
         table_errors = validate_single_dataframe(df, schema)
-        # if table_errors:
-        #     for err in table_errors:
-        #         logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
-        #     errors.extend(table_errors)
-        # else:
-        #     logging.info("Table %s passed validation.", Path(mut_table_fp).name)
+        if table_errors:
+            for err in table_errors:
+                logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
+                dataframes_status_dict_list.append(
+                    {
+                        "mutation_df": df,
+                        "segment": schema["name"],
+                        "errors": table_errors,
+                        "validation_status": "Failed",
+                    }
+                )
+        else:
+            logging.info("Table %s passed validation.", Path(mut_table_fp).name)
+            dataframes_status_dict_list.append(
+                {
+                    "mutation_df": df,
+                    "mutation_table_fp": mut_table_fp,
+                    "segment": schema["name"],
+                    "errors": table_errors,
+                    "validation_status": "Passed",
+                }
+            )
+    return dataframes_status_dict_list
 
 
 # ---------- Archiving & Replacement ----------
 def ensure_dir(p: str):
     Path(p).mkdir(parents=True, exist_ok=True)
 
+def copy_table(new_table_path: str, tables_dir: str) -> None:
+    dst = shutil.copy2(validated_tables[0][0], tables_dir)
+    src_size = os.path.getsize(validate_dataframes[0][0])
+    dst_size = os.path.getsize(str(Path(tables_dir) / Path(validated_tables[0][0]).name))
+    if os.path.exists(dst) and src_size == dst_size:
+        logging.info("Copied %s to %s", new_table_path, tables_dir
+                     )
+    else:
+        logging.critical("Failed to copy %s to %s", new_table_path, tables_dir)
+
+
+def update_tables(
+        dataframes_status_dict_list: list[dict],
+        tables_dir: str,
+        archive_dir: str,
+        user: str,
+        log_file: str,
+    ) -> None:
+    """Update tables that have passed validation."""
+    # Check if validation passed
+    validated_tables = []
+    for dataframes_status_dict in dataframes_status_dict_list:
+        if dataframes_status_dict["validation_status"] == "Passed":
+            validated_tables.append(
+                (dataframes_status_dict["mutation_table_fp"], dataframes_status_dict["segment"])
+            )
+        else:
+            logging.warning("No tables passed validation. No updates made.")
+    if validated_tables:
+        # Check if directories exists
+        for dir in [tables_dir, archive_dir]:
+            if not Path(dir).exists():
+                ensure_dir(p: str)
+                logging.info("Created directory: %s", dir)
+                # Copy new file to tables directory
+                for validated_table in validated_tables:
+                    copy_table(validated_table[0], tables_dir)
+            else:
+                logging.info("Directory exists: %s", dir)
+                # Identify if segment table exists in tables_dir
+                for validated_table in validated_tables:
+                    segment_name = validated_table[1]
+                    new_table_path = validated_table[0]
+                    existing_seg_tables = glob.glob(str(Path(tables_dir) / f"{segment_name}*"))
+                    if not existing_seg_tables:
+                        copy_table(new_table_path, tables_dir)
+                    else:
+                        
+
+
+    # If Yes,
+    #   Create new name with current date for table
+    #   Check if directory exists for tables_dir and archive_dir
+    #       If No, create directories and save file to tables directory, update log
+    #       If Yes,
+    #           Check if segment table exists in tables_dir
+    #           If No,  save file to tables directory, update log
+    #           If Yes,
+    #              Move existing file to archive_dir/date/, update log
+    #              Save new file to tables directory, update log
+    # Tidy Step:
+    # Check if Archive directory containers > 3 versions of any segment table
+    # If yes, delete oldest version, log
+
+                  
 
 def archive_and_replace(
-    validated_files: list[tuple[str, dict]], tables_dir: str, archive_dir: str, user: str, log_file: str
+    validated_files: list[dict], tables_dir: str, archive_dir: str, user: str, log_file: str
 ) -> None:
     """validated_files: list of (source_path, schema) tuples."""
     # Compute date folder
@@ -489,10 +548,19 @@ def main():
     schema_file_map, skipped_files = map_schema_to_file(files, schemas_map, segment_names)
 
     # Validate tables with schemas
-    validate_dataframes(schema_file_map)
+    dataframes_status_dict_list = validate_dataframes(schema_file_map)
+
+    update_tables(dataframes_status_dict_list, args.tables_dir, args.archive_dir, args.user, args.log_file)
+    # # Check if validation passed, and update files
+    # for dataframes_status_dict in dataframes_status_dict_list:
+    #     if dataframes_status_dict["validation_status"] == "Passed":
+    #         # Archive old file
+    #         # Save new file in place
+    #         # archive_and_replace(validated, args.tables_dir, args.archive_dir, args.user, args.log_file)
+    #         pass
 
     # # All good → archive + replace
-    # archive_and_replace(validated, args.tables_dir, args.archive_dir, args.user, args.log_file)
+    
     # print(f"Success. {len(validated)} table(s) validated and updated.\nLog: {args.log_file}")
 
 

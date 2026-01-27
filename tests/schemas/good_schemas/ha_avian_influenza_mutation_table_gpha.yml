@@ -27,12 +27,12 @@ columns:
     type: int
     required: true
     min: 1
-    max: 700
+    max: 552
   - name: position_H3
     type: int
     required: false
     min: 1
-    max: 700
+    max: 550
   - name: ref_AA
     type: str
     required: true
