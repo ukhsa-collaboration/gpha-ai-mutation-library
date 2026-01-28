@@ -244,8 +244,11 @@ def test_correct_map_schema_file(load_good_tables, load_good_schemas):
     assert skipped_files == []
 
 
-# Looks like the tests 'test_unxpected_column', 'test_required_values_error' and 'test_int_type_check_error' all have
-# the same structure. You could parametrize them like this:
+# Looks like many of the tests below have the same structure - call the fixture, put it and the HA schema into the
+# function to test, assert that the output message is in the errors list. These lend themselves to parametrisation -
+# essentially a for loop built into Pytest that iterates over tuples of arguments you set which get passed to the test
+# function. Because some of these arguments are fixtures, you have to request the fixture (first line in the test).
+# This means that there is less duplicated code, it's easier to read (theoretically) and adding new test cases is easy.
 
 
 @pytest.mark.parametrize(
@@ -421,7 +424,7 @@ def test_correct_ha_table_validation(correct_ha_df, correct_ha_schema):
     df = correct_ha_df
     schema = correct_ha_schema
     errors = vau.validate_single_dataframe(df, schema)
-    assert errors == []
+    assert not errors
 
 
 # Test dataframe validation
