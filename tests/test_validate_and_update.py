@@ -5,6 +5,15 @@ import pytest
 
 from mutation_table_updater import validate_and_update as vau
 
+# If you want to split up the tests between the schema and the tables neater, you could have some test classes and
+# have the associated fixtures with it.
+
+# If you wanted to do away with having so many files, just make them on the fly.
+# Say you wanted to drop a col, just do that in the unit test, write it to a temp dir (use tmp_path builtin) and then
+# give that to the function. The test is then very explicit about what it's doing in one place. There are examples of
+# this in claspar - tests/test_virus.py and tests/test_setup.py where break dataframes by dropping columns or changing
+# col names to check an exception catch works as expected.
+
 ########################### Fixtures ###########################
 # You can just have constants:
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -305,6 +314,7 @@ def test_table_integrity(description, input, errormsg, correct_ha_schema, reques
     assert errormsg in errors, f"Expected {errormsg}, got {errors}"
 
 
+# --> Everything from here and below, to next arrow can be deleted, it's captured in the parametrised test above.
 # Per ccolumn checks
 def test_unexpected_column(table_unexpected_col, correct_ha_schema):
     """Test unexpected column is identified"""
@@ -418,6 +428,9 @@ def test_oob_low_int_check(oob_met1_min_position_error, correct_ha_schema):
     expected_error_msg = "Value outside bounds (1 - 568) for column 'position_met1'. check values: [0]"
 
     assert expected_error_msg in errors
+
+
+# --> Everything from here upwards to next arrow can be deleted, it's captured in the parametrised test above.
 
 
 def test_correct_ha_table_validation(correct_ha_df, correct_ha_schema):
