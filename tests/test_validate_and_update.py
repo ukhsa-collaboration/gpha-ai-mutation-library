@@ -5,18 +5,19 @@ import pytest
 
 from mutation_table_updater import validate_and_update as vau
 
-
 ########################### Fixtures ###########################
+# You can just have constants:
+SCRIPT_DIR = Path(__file__).resolve().parent
+
+
 @pytest.fixture
 def correct_ha_tsv():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     ha_tsv_fp = SCRIPT_DIR / "tables/correct_tables/ha_avian_influenza_mutation_table_gpha.tsv"
     return ha_tsv_fp
 
 
 @pytest.fixture
 def failed_fn_tsv():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     failed_tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/incorrect_fn_test.tsv"
     return failed_tsv_fp
 
@@ -35,7 +36,6 @@ def correct_ha_schema(load_schemas, correct_ha_tsv):
 
 @pytest.fixture
 def load_schemas():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_dir = SCRIPT_DIR / "schemas/good_schemas/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
@@ -43,7 +43,6 @@ def load_schemas():
 
 @pytest.fixture
 def load_bad_schemas():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_dir = SCRIPT_DIR / "schemas/bad_schemas/bad_top_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
@@ -51,7 +50,6 @@ def load_bad_schemas():
 
 @pytest.fixture
 def load_extra_colname_schemas():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_dir = SCRIPT_DIR / "schemas/bad_schemas/extra_columns_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
@@ -59,7 +57,6 @@ def load_extra_colname_schemas():
 
 @pytest.fixture
 def load_missing_colname_schemas():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_dir = SCRIPT_DIR / "schemas/bad_schemas/missing_columns_key_schema/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
@@ -67,7 +64,6 @@ def load_missing_colname_schemas():
 
 @pytest.fixture
 def load_good_schemas():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     schemas_dir = SCRIPT_DIR / "schemas/good_schemas/"
     schemas_map = vau.load_schemas(schemas_dir)
     return schemas_map
@@ -75,7 +71,6 @@ def load_good_schemas():
 
 @pytest.fixture
 def load_good_tables():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tables_dir = SCRIPT_DIR / "tables/correct_tables/"
     tables = vau.list_candidate_files(tables_dir)
     return tables
@@ -83,7 +78,6 @@ def load_good_tables():
 
 @pytest.fixture
 def table_missing_req_col():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_missing_required_column.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -91,7 +85,6 @@ def table_missing_req_col():
 
 @pytest.fixture
 def table_unexpected_col():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_unexp_column.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -99,7 +92,6 @@ def table_unexpected_col():
 
 @pytest.fixture
 def table_required_values_error():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_not_null_error.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -107,7 +99,6 @@ def table_required_values_error():
 
 @pytest.fixture
 def int_type_check_error():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_int_error.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -115,7 +106,6 @@ def int_type_check_error():
 
 @pytest.fixture
 def subtype_pattern_error():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_subtype_regex_check.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -123,7 +113,6 @@ def subtype_pattern_error():
 
 @pytest.fixture
 def allowed_aa_values_error():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_incorrect_aa_value.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -131,7 +120,6 @@ def allowed_aa_values_error():
 
 @pytest.fixture
 def allowed_phenotypes_values_error():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_incorrect_pheno_value.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -139,7 +127,6 @@ def allowed_phenotypes_values_error():
 
 @pytest.fixture
 def oob_met1_position_error():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_oob_met1_position.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -147,7 +134,6 @@ def oob_met1_position_error():
 
 @pytest.fixture
 def oob_met1_min_position_error():
-    SCRIPT_DIR = Path(__file__).resolve().parent
     tsv_fp = SCRIPT_DIR / "tables/incorrect_tables/ha_avian_influenza_mutation_table_gpha_oob_met1_low_position.tsv"
     df = vau.read_table(tsv_fp)
     return df
@@ -256,6 +242,64 @@ def test_correct_map_schema_file(load_good_tables, load_good_schemas):
 
     # Check no missing files
     assert skipped_files == []
+
+
+# Looks like the tests 'test_unxpected_column', 'test_required_values_error' and 'test_int_type_check_error' all have
+# the same structure. You could parametrize them like this:
+
+
+@pytest.mark.parametrize(
+    "description,input,errormsg",
+    [
+        (
+            "Test unexpected column is identified",
+            "table_unexpected_col",
+            "Unexpected columns present: unexpected_column",
+        ),
+        (
+            "Test required non-null values are identified",
+            "table_required_values_error",
+            "feature_type: 1 required values are null",
+        ),
+        ("Test int type violations are identified", "int_type_check_error", "position_met1: 1 rows fail type 'int'"),
+        (
+            "Test regex pattern violations are identified",
+            "subtype_pattern_error",
+            "subtype_tested: 1 rows fail regex '^H[0-9]+N[0-9]+$'",
+        ),
+        (
+            "Test allowed values are used in column",
+            "allowed_aa_values_error",
+            "ref_AA: 1 row(s) contain values not present in the reference file (check schemas/reference_lists/).",
+        ),
+        (
+            "Test allowed values are allowed phenotypes",
+            "allowed_phenotypes_values_error",
+            (
+                "phenotypic_category: 1 row(s) contain values not present in the reference file "
+                "(check schemas/reference_lists/)."
+            ),
+        ),
+        (
+            "Test high out-of-bounds values are identified",
+            "oob_met1_position_error",
+            "Value outside bounds (1 - 568) for column 'position_met1'. check values: [999]",
+        ),
+        (
+            "Test low out-of-bounds values are identified",
+            "oob_met1_min_position_error",
+            "Value outside bounds (1 - 568) for column 'position_met1'. check values: [0]",
+        ),
+    ],
+)
+def test_table_integrity(description, input, errormsg, correct_ha_schema, request):
+    df = request.getfixturevalue(input)
+    schema = correct_ha_schema
+
+    errors = vau.validate_single_dataframe(df, schema)
+
+    # Check error message for unexpected column
+    assert errormsg in errors, f"Expected {errormsg}, got {errors}"
 
 
 # Per ccolumn checks
