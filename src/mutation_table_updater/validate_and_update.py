@@ -570,6 +570,7 @@ def main():
     # Validate tables with schemas
     dataframes_status_dict_list = validate_dataframes(schema_file_map)
 
+    # Save/Archive tables that passed validation
     update_status = update_tables(
         dataframes_status_dict_list, args.tables_dir, args.archive_dir, args.user, args.log_file
     )
