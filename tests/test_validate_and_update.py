@@ -321,10 +321,20 @@ def test_correct_ha_table_validation(correct_ha_df, correct_ha_schema):
     assert not errors
 
 
-# Test dataframe validation
+# To test saving archiving:
 """
-what am i trying to test?
-- things are archived appropriately
-- Logs are appropriate
+1. No existing table or archive directories
+2. Existing table directory, no archive directory
+3. Existing archive directory, no table directory
+4. Both existing table and archive directories:
+    4.1 New table is different from existing tables
+    4.2 New table is the same as existing tables
+? Test if copy fails
 
+- How do I create temporary dirs and files for these tests?
 """
+# Create temporary dirs and files
+# Create t
+
+
+# Test copying new table when no existing table
