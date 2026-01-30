@@ -14,7 +14,6 @@ import hashlib
 import json
 import logging
 import os
-import pathlib
 import re
 import shutil
 import sys
@@ -331,7 +330,10 @@ def validate_single_dataframe(df, schema) -> list[str]:
             not_allowed = df[~col_lower.isin(allowed)]
             if not not_allowed.empty:
                 incorrect_values = col_lower.tolist()
-                error = f"{col}: {len(not_allowed)} row(s) contain values not present in the reference file (check schemas/reference_lists/)."
+                error = (
+                    f"{col}: {len(not_allowed)} row(s) contain values not "
+                    "present in the reference file (check schemas/reference_lists/)."
+                )
                 logging.critical(error)
                 logging.critical("Incorrect value(s): %s", ", ".join(map(str, incorrect_values)))
                 errors.append(error)
@@ -399,68 +401,87 @@ def ensure_dir(p: str):
     Path(p).mkdir(parents=True, exist_ok=True)
 
 
-def copy_table(new_table_path: str, tables_dir: str) -> None:
-    dst = shutil.copy2(validated_tables[0][0], tables_dir)
-    src_size = os.path.getsize(validate_dataframes[0][0])
-    dst_size = os.path.getsize(str(Path(tables_dir) / Path(validated_tables[0][0]).name))
-    if os.path.exists(dst) and src_size == dst_size:
-        logging.info("Copied %s to %s", new_table_path, tables_dir)
+def copy_table(original_table_path: str, new_table_dir: str, new_filename: str | None = None) -> None:
+    original_path = Path(original_table_path)
+    new_table_dir = Path(new_table_dir)
+
+    # Determine destination path (directory + optional new filename)
+    dst_path = new_table_dir / new_filename if new_filename else new_table_dir / original_path.name
+
+    # Perform copy
+    dst = shutil.copy2(original_path, dst_path)
+
+    # Compare sizes
+    src_size = original_path.stat().st_size
+    dst_size = dst.stat().st_size
+
+    if dst_path.exists() and src_size == dst_size:
+        logging.info("Copied %s to %s", original_table_path, dst_path)
     else:
-        logging.critical("Failed to copy %s to %s", new_table_path, tables_dir)
+        logging.critical("Failed to copy %s to %s", original_table_path, dst_path)
 
 
-# def update_tables(
-#         dataframes_status_dict_list: list[dict],
-#         tables_dir: str,
-#         archive_dir: str,
-#         user: str,
-#         log_file: str,
-#     ) -> None:
-#     """Update tables that have passed validation."""
-#     # Check if validation passed
-#     validated_tables = []
-#     for dataframes_status_dict in dataframes_status_dict_list:
-#         if dataframes_status_dict["validation_status"] == "Passed":
-#             validated_tables.append(
-#                 (dataframes_status_dict["mutation_table_fp"], dataframes_status_dict["segment"])
-#             )
-#         else:
-#             logging.warning("No tables passed validation. No updates made.")
-#     if validated_tables:
-#         # Check if directories exists
-#         for dir in [tables_dir, archive_dir]:
-#             if not Path(dir).exists():
-#                 ensure_dir(p: str)
-#                 logging.info("Created directory: %s", dir)
-#                 # Copy new file to tables directory
-#                 for validated_table in validated_tables:
-#                     copy_table(validated_table[0], tables_dir)
-#             else:
-#                 logging.info("Directory exists: %s", dir)
-#                 # Identify if segment table exists in tables_dir
-#                 for validated_table in validated_tables:
-#                     segment_name = validated_table[1]
-#                     new_table_path = validated_table[0]
-#                     existing_seg_tables = glob.glob(str(Path(tables_dir) / f"{segment_name}*"))
-#                     if not existing_seg_tables:
-#                         copy_table(new_table_path, tables_dir)
-#                     else:
-#                         pass
-
-
-# If Yes,
-#   Create new name with current date for table
-#   Check if directory exists for tables_dir and archive_dir
-#       If No, create directories and save file to tables directory, update log
-#       If Yes,
-#           Check if segment table exists in tables_dir
-#           If No,  save file to tables directory, update log
-#           If Yes,
-#              Move existing file to archive_dir/date/, update log
-#              Save new file to tables directory, update log
-# Tidy Step:
-# Check if Archive directory containers > 3 versions of any segment table
-# If yes, delete oldest version, log
+def update_tables(
+    dataframes_status_dict_list: list[dict],
+    tables_dir: str,
+    archive_dir: str,
+    user: str,
+    log_file: str,
+) -> None:
+    """Update tables that have passed validation."""
+    # Check if validation passed
+    validated_tables = []
+    for dataframes_status_dict in dataframes_status_dict_list:
+        if dataframes_status_dict["validation_status"] == "Passed":
+            validated_tables.append((dataframes_status_dict["mutation_table_fp"], dataframes_status_dict["segment"]))
+        else:
+            logging.warning("No tables passed validation. No updates made.")
+            return False  # Exit function if no tables passed validation
+    if validated_tables:
+        # Check if directories exists
+        for dir in [tables_dir, archive_dir]:
+            if not Path(dir).exists():
+                ensure_dir(dir)
+                logging.info("Created directory: %s", dir)
+                # Copy new file to tables directory
+                for validated_table in validated_tables:
+                    copy_table(validated_table[0], tables_dir)
+                    logging.info("Copied %s to %s", validated_table[0], tables_dir)
+                    return True
+            else:
+                logging.info("Directory exists: %s", dir)
+                # Identify if segment table exists in tables_dir
+                for validated_table in validated_tables:
+                    segment_name = validated_table[1]
+                    new_table_path = validated_table[0]
+                    existing_seg_tables = Path.glob(str(Path(tables_dir) / f"{segment_name}*"))
+                    if not existing_seg_tables:
+                        copy_table(new_table_path, tables_dir)
+                        logging.info("Copied %s to %s", new_table_path, tables_dir)
+                        return True
+                    else:
+                        if len(existing_seg_tables) == 1:
+                            # Move existing file to archive_dir/
+                            logging.info("Archiving existing table(s) for segment: %s", segment_name)
+                            date_str = dt.date.today().isoformat()
+                            archive_file_name = "_".join([date_str, existing_seg_tables[0].name])
+                            copy_table(new_table_path, archive_dir, archive_file_name)
+                            logging.info(
+                                "Archived existing table %s to %s",
+                                existing_seg_tables[0],
+                                str(Path(archive_dir) / archive_file_name),
+                            )
+                            # Save new file to tables directory
+                            copy_table(new_table_path, tables_dir)
+                            logging.info("Copied %s to %s", new_table_path, tables_dir)
+                            return True
+                        else:
+                            logging.critical(
+                                "Multiple existing tables found for segment %s in %s. Please resolve manually.",
+                                segment_name,
+                                tables_dir,
+                            )
+                            return False
 
 
 def archive_and_replace(
@@ -549,18 +570,13 @@ def main():
     # Validate tables with schemas
     dataframes_status_dict_list = validate_dataframes(schema_file_map)
 
-    # update_tables(dataframes_status_dict_list, args.tables_dir, args.archive_dir, args.user, args.log_file)
-    # # Check if validation passed, and update files
-    # for dataframes_status_dict in dataframes_status_dict_list:
-    #     if dataframes_status_dict["validation_status"] == "Passed":
-    #         # Archive old file
-    #         # Save new file in place
-    #         # archive_and_replace(validated, args.tables_dir, args.archive_dir, args.user, args.log_file)
-    #         pass
-
-    # # All good → archive + replace
-
-    # print(f"Success. {len(validated)} table(s) validated and updated.\nLog: {args.log_file}")
+    update_status = update_tables(
+        dataframes_status_dict_list, args.tables_dir, args.archive_dir, args.user, args.log_file
+    )
+    if update_status is True:
+        print(f"Success. Tables validated and updated.\nLog: {args.log_file}")
+    else:
+        print(f"No tables were updated. Check log for details: {args.log_file}")
 
 
 if __name__ == "__main__":
