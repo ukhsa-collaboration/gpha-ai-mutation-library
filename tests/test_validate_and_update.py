@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 from pathlib import Path
 
@@ -334,7 +335,108 @@ def test_correct_ha_table_validation(correct_ha_df, correct_ha_schema):
 - How do I create temporary dirs and files for these tests?
 """
 # Create temporary dirs and files
-# Create t
+
+
+@pytest.fixture
+def setup_empty_dirs(tmp_path):
+    tables_dir = tmp_path / "tables"
+    archive_dir = tmp_path / "archive"
+    return tables_dir, archive_dir
 
 
 # Test copying new table when no existing table
+def test_save_new_table_no_existing_table(setup_empty_dirs, correct_ha_tsv):
+    tables_dir, archive_dir = setup_empty_dirs
+
+    update_status = vau.update_tables(
+        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}],
+        tables_dir,
+        archive_dir,
+        "test@ukhsa.gov.uk",
+        "logfile.log",
+    )
+
+    assert update_status is True
+
+
+@pytest.fixture
+def setup_existing_table_dirs(tmp_path):
+    tables_dir = tmp_path / "tables"
+    archive_dir = tmp_path / "archive"
+
+    tables_dir.mkdir()
+    archive_dir.mkdir()
+
+    ha_placeholder = tables_dir / "ha_avian_influenza_mutation_table_gpha.tsv"
+
+    ha_placeholder.write_text("dummy content")
+
+    return tables_dir, archive_dir
+
+
+# Test when there is a file present
+# Test copying new table when no existing table
+def test_save_new_table_with_existing_table(setup_existing_table_dirs, correct_ha_tsv):
+    tables_dir, archive_dir = setup_existing_table_dirs
+
+    update_status = vau.update_tables(
+        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}],
+        tables_dir,
+        archive_dir,
+        "test@ukhsa.gov.uk",
+        "logfile.log",
+    )
+
+    # expected files
+    expected_output_file = tables_dir / "ha_avian_influenza_mutation_table_gpha.tsv"
+    expected_archive_file = archive_dir / f"{dt.date.today().isoformat()}_ha_avian_influenza_mutation_table_gpha.tsv"
+
+    assert update_status is True
+    assert expected_archive_file.exists()
+    assert expected_output_file.exists()
+
+
+# Test archive cleanup
+@pytest.fixture
+def setup_full_archive(tmp_path):
+    tables_dir = tmp_path / "tables"
+    archive_dir = tmp_path / "archive"
+
+    tables_dir.mkdir()
+    archive_dir.mkdir()
+
+    ha_placeholder = tables_dir / "ha_avian_influenza_mutation_table_gpha.tsv"
+
+    archive_placeholder_1 = tables_dir / "2026-01-01_ha_avian_influenza_mutation_table_gpha.tsv"
+    archive_placeholder_2 = tables_dir / "2026-01-02_ha_avian_influenza_mutation_table_gpha.tsv"
+    archive_placeholder_3 = tables_dir / "2026-01-03_ha_avian_influenza_mutation_table_gpha.tsv"
+
+    ha_placeholder.write_text("dummy content")
+    archive_placeholder_1.write_text("dummy content")
+    archive_placeholder_2.write_text("dummy content")
+    archive_placeholder_3.write_text("dummy content")
+
+    return tables_dir, archive_dir
+
+
+# Test archive cleanup
+def test_archive_cleanup(setup_full_archive, correct_ha_tsv):
+    tables_dir, archive_dir = setup_full_archive
+
+    update_status = vau.update_tables(
+        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}],
+        tables_dir,
+        archive_dir,
+        "test@ukhsa.gov.uk",
+        "logfile.log",
+    )
+
+    # expected files
+    expected_output_file = tables_dir / "ha_avian_influenza_mutation_table_gpha.tsv"
+    expected_archive_file = archive_dir / f"{dt.date.today().isoformat()}_ha_avian_influenza_mutation_table_gpha.tsv"
+    delected_archive_file = archive_dir / "2026-01-01_ha_avian_influenza_mutation_table_gpha.tsv"
+
+    assert update_status is True
+    assert expected_output_file.exists()
+    assert expected_archive_file.exists()
+    assert delected_archive_file.exists() is False

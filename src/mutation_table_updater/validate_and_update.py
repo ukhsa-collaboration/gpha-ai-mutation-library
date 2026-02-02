@@ -11,7 +11,6 @@ Usage examples:
 import argparse
 import datetime as dt
 import hashlib
-import json
 import logging
 import os
 import re
@@ -454,7 +453,7 @@ def update_tables(
                 for validated_table in validated_tables:
                     segment_name = validated_table[1]
                     new_table_path = validated_table[0]
-                    existing_seg_tables = Path.glob(str(Path(tables_dir) / f"{segment_name}*"))
+                    existing_seg_tables = list(Path(tables_dir).glob(f"{segment_name}*"))
                     if not existing_seg_tables:
                         copy_table(new_table_path, tables_dir)
                         logging.info("Copied %s to %s", new_table_path, tables_dir)
@@ -465,7 +464,7 @@ def update_tables(
                             logging.info("Archiving existing table(s) for segment: %s", segment_name)
                             date_str = dt.date.today().isoformat()
                             archive_file_name = "_".join([date_str, existing_seg_tables[0].name])
-                            copy_table(new_table_path, archive_dir, archive_file_name)
+                            copy_table(existing_seg_tables[0], archive_dir, archive_file_name)
                             logging.info(
                                 "Archived existing table %s to %s",
                                 existing_seg_tables[0],
@@ -484,56 +483,39 @@ def update_tables(
                             return False
 
 
-def archive_and_replace(
-    validated_files: list[dict], tables_dir: str, archive_dir: str, user: str, log_file: str
-) -> None:
+def archive_cleanup(archive_dir: str) -> None:
     """validated_files: list of (source_path, schema) tuples."""
     # Compute date folder
-    date_str = dt.date.today().isoformat()
-    archive_today = str(Path(archive_dir) / date_str)
-    ensure_dir(archive_today)
-    ensure_dir(tables_dir)
+    archive_path = Path(archive_dir)
 
-    for src_path, schema in validated_files:
-        base = Path(src_path).name
-        target_name = schema.get("filename") or base
-        target_path = str(Path(tables_dir) / target_name)
+    # Check to see if there are more than 3 files with the same name
+    files = list(archive_path.glob("*"))
 
-        # Hash counts old/new
-        old_exists = Path(target_path).exists()
-        old_hash = sha256_file(target_path) if old_exists else None
-        old_rows = None
-        if old_exists:
-            try:
-                old_rows = len(read_table(target_path))
-            except Exception:
-                old_rows = None
+    # Extract out unique file names, ignoring date prefixes
+    # for each file remove the first YYYY-MM-DD_ part
+    file_name_map: dict[str, list[Path]] = {}
+    for f in files:
+        fname = f.name
+        # Remove date prefix
+        match = re.match(r"^\d{4}-\d{2}-\d{2}_(.+)$", fname)
+        core_name = match.group(1) if match else fname
+        if core_name not in file_name_map:
+            file_name_map[core_name] = []
+        file_name_map[core_name].append(f)
 
-        new_hash = sha256_file(src_path)
-        new_rows = len(read_table(src_path))
-
-        # Archive old (if exists)
-        if old_exists:
-            shutil.move(target_path, str(Path(archive_today) / Path(target_path).name))
-
-        # Replace with new
-        shutil.copy2(src_path, target_path)
-
-        # Log
-        entry = {
-            "timestamp_utc": utc_now_iso(),
-            "user": user,
-            "table": target_name,
-            "source": str(Path(src_path).resolve()),
-            "action": "update",
-            "old_sha256": old_hash,
-            "new_sha256": new_hash,
-            "old_rows": old_rows,
-            "new_rows": new_rows,
-            "archive_path": str(Path(archive_today) / Path(target_path).name) if old_exists else None,
-        }
-        with Path.open(log_file, "a", encoding="utf-8") as lf:
-            lf.write(json.dumps(entry) + "\n")
+    # For each unique file name, check if more than 3 exist
+    for _, file_list in file_name_map.items():
+        if len(file_list) > 3:
+            # sort files by date prefix (oldest first)
+            file_list.sort(key=lambda x: x.name)
+            files_to_delete = file_list[:-3]
+            # Delete oldest file
+            for f in files_to_delete:
+                try:
+                    f.unlink()
+                    logging.info("Deleted old archive file: %s", f)
+                except Exception as e:
+                    logging.error("Failed to delete archive file %s: %s", f, str(e))
 
 
 # ---------- Main ----------
@@ -578,6 +560,9 @@ def main():
         print(f"Success. Tables validated and updated.\nLog: {args.log_file}")
     else:
         print(f"No tables were updated. Check log for details: {args.log_file}")
+
+    # Clean up archive directory, if more than 3 files of the same segment name, deleted oldest (based on prefix)
+    archive_cleanup(args.archive_dir)
 
 
 if __name__ == "__main__":
