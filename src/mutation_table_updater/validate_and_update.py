@@ -533,6 +533,12 @@ def main():
     # Set up Logging
     setup_logging(args.log_file, args.log_level)
 
+    logging.info(
+        f"\n########################################################################################################\n"
+        f"User: {args.user} started table validation and update process.\n"
+        f"########################################################################################################"
+    )
+
     # Collect files and schemas
     files = list_candidate_files(args.input)
     if not files:
@@ -557,12 +563,18 @@ def main():
         dataframes_status_dict_list, args.tables_dir, args.archive_dir, args.user, args.log_file
     )
     if update_status is True:
-        print(f"Success. Tables validated and updated.\nLog: {args.log_file}")
+        logging.info(f"Success. Tables validated and updated. Check log for details: {args.log_file}")
     else:
-        print(f"No tables were updated. Check log for details: {args.log_file}")
+        logging.warning(f"No tables were updated. Check log for details: {args.log_file}")
 
     # Clean up archive directory, if more than 3 files of the same segment name, deleted oldest (based on prefix)
     archive_cleanup(args.archive_dir)
+
+    logging.info(
+        f"\n########################################################################################################\n"
+        f"User: {args.user} completed table validation and update process.\n"
+        f"########################################################################################################"
+    )
 
 
 if __name__ == "__main__":
