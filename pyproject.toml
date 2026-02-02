@@ -1,0 +1,54 @@
+[project]
+    name = "mutation_table_updater"
+    authors = [{name = "Nicholas Ellaby", email = "nicholas.ellaby@ukhsa.gov.uk"}]
+    description = "AI-Mutation-Library: A library utility for storing and upating validated avian influenza genomic mutations."
+    dynamic = ["version"]
+    requires-python = ">= 3.12"
+
+    dependencies = [
+        "numpy",
+        "pandas",
+        "pyyaml",
+        "pytest"
+    ]
+
+[tool.setuptools.dynamic]
+version = { attr = "mutation_table_updater.__version__" }
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # comprehesnions
+    "C4",
+    # pathlib
+    "PTH",
+]
+
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+tmp_path_retention_policy = "failed"
+tmp_path_retention_count = 2

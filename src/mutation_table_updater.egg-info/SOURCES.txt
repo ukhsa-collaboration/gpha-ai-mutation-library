@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+src/mutation_table_updater/__init__.py
+src/mutation_table_updater/validate_and_update.py
+src/mutation_table_updater.egg-info/PKG-INFO
+src/mutation_table_updater.egg-info/SOURCES.txt
+src/mutation_table_updater.egg-info/dependency_links.txt
+src/mutation_table_updater.egg-info/requires.txt
+src/mutation_table_updater.egg-info/top_level.txt
+tests/test_end_to_end.py
+tests/test_validate_and_update.py

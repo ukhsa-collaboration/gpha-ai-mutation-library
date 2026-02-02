@@ -1,0 +1,2 @@
+feature_type	combination_name	combination_id	segment	position_H5	position_H3	ref_AA	alt_AA	name	subtype_tested	subtype_notes	phenotypic_consequences	phenotypic_category	concern_score	confidence_score	phenotypic_effect	host_type	host_taxon	source	references	PMID	additional_comments	gpha_background	gpha_known_muts
+combination	HA:E75K-HA:S123P	HA:E75K-HA:S123P:1	HA	75	83	E	K	H5N1	H5N1		Increased virus binding to α2–6	two_six_receptor_binding			increase	avian		literature	https://doi.org/10.1038/nature05264 	17108965		Y	

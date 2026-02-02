@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: mutation_table_updater
+Version: 0.0.2
+Summary: AI-Mutation-Library: A library utility for storing and upating validated avian influenza genomic mutations.
+Author-email: Nicholas Ellaby <nicholas.ellaby@ukhsa.gov.uk>
+Requires-Python: >=3.12
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: pyyaml
+Requires-Dist: pytest
+Dynamic: license-file
