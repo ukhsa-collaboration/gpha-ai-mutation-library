@@ -261,7 +261,7 @@ def _type_check(series: pd.Series, typ: str) -> list[int]:
     return failures
 
 
-def validate_single_dataframe(df, schema) -> list[str]:
+def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     errors: list[str] = []
 
     # column rules
@@ -277,6 +277,7 @@ def validate_single_dataframe(df, schema) -> list[str]:
             return error
 
     def unexpected_columns(df: pd.DataFrame, schema: dict) -> str:
+        logging.debug(f"schema: {schema}")
         allowed_cols = [c["name"] for c in schema.get("columns", [])]
         if schema.get("strict_columns", True):
             extra = sorted(set(df.columns) - set(allowed_cols))
@@ -305,7 +306,10 @@ def validate_single_dataframe(df, schema) -> list[str]:
     # Per-column checks
     for col_rule in schema.get("columns", []):
         col = col_rule["name"]
+        logging.debug(f"col: {col}")
         series = df[col]
+        logging.debug(f"df: {df.columns}")
+        logging.debug(f"series: {series}")
         if col not in df.columns:
             # Already flagged if required; skip otherwise
             continue
@@ -334,9 +338,12 @@ def validate_single_dataframe(df, schema) -> list[str]:
 
         # Allowed values (inline)
         if "allowed_values_file" in col_rule:
-            fpath = Path.cwd() / col_rule["allowed_values_file"]
+            logging.debug(f"col_rule: {col_rule}")
+            fpath = Path(schemas_dir) / col_rule["allowed_values_file"]
             with Path.open(fpath, "r", encoding="utf-8") as f:
                 allowed = {line.strip().lower() for line in f if line.strip()}
+            logging.debug(f"allowed values file: {fpath}")
+            logging.debug(f"allowed values: {allowed}")
             col_lower = df[col].astype("string").str.lower()
             not_allowed = df[~col_lower.isin(allowed)]
             if not not_allowed.empty:
@@ -372,7 +379,7 @@ def validate_single_dataframe(df, schema) -> list[str]:
     return errors
 
 
-def validate_dataframes(schema_file_map: dict) -> list[dict]:
+def validate_dataframes(schema_file_map: dict, schemas_dir: str) -> list[dict]:
     """
     Return list of human-readable validation error messages.
     """
@@ -381,7 +388,7 @@ def validate_dataframes(schema_file_map: dict) -> list[dict]:
         logging.info("Validating table %s against schema %s.", Path(mut_table_fp).name, schema["name"])
         df = read_table(mut_table_fp)
 
-        table_errors = validate_single_dataframe(df, schema)
+        table_errors = validate_single_dataframe(df, schema, schemas_dir)
         if table_errors:
             for err in table_errors:
                 logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
@@ -574,7 +581,7 @@ def main():
     schema_file_map, skipped_files = map_schema_to_file(files, schemas_map, segment_names)
 
     # Validate tables with schemas
-    dataframes_status_dict_list = validate_dataframes(schema_file_map)
+    dataframes_status_dict_list = validate_dataframes(schema_file_map, args.schemas_dir)
 
     # Save/Archive tables that passed validation
     update_status = update_tables(dataframes_status_dict_list, args.tables_dir, args.archive_dir)
