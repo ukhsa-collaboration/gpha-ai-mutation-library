@@ -48,11 +48,19 @@ def setup_logging(log_filename, logging_level):
 
 
 # ---------- Helpers ----------
-def dir_path(path):
-    if Path(path).is_dir():
+def dir_path(path: str) -> str:
+    p = Path(path)
+
+    # If it already exists AND is a directory
+    if p.is_dir():
         return path
-    else:
-        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory")
+
+    # If it does not exist, create it
+    try:
+        p.mkdir(parents=True, exist_ok=True)
+        return path
+    except Exception as e:
+        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory and could not be created: {e}")
 
 
 def utc_now_iso() -> str:
