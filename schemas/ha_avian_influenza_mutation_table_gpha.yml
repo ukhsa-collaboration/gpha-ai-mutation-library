@@ -47,7 +47,7 @@ columns:
     pattern: "^[A-Z][0-9]+[A-Z][0-9]$"
   - name: subtype_tested
     type: str
-    required: true
+    required: false
     pattern: "^H[0-9]+N[0-9]+$" # e.g. H5N1
   - name: subtype_notes
     type: str

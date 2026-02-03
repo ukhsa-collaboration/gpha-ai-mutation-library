@@ -277,7 +277,6 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
             return error
 
     def unexpected_columns(df: pd.DataFrame, schema: dict) -> str:
-        logging.debug(f"schema: {schema}")
         allowed_cols = [c["name"] for c in schema.get("columns", [])]
         if schema.get("strict_columns", True):
             extra = sorted(set(df.columns) - set(allowed_cols))
@@ -306,10 +305,7 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     # Per-column checks
     for col_rule in schema.get("columns", []):
         col = col_rule["name"]
-        logging.debug(f"col: {col}")
         series = df[col]
-        logging.debug(f"df: {df.columns}")
-        logging.debug(f"series: {series}")
         if col not in df.columns:
             # Already flagged if required; skip otherwise
             continue
@@ -342,18 +338,17 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
             fpath = Path(schemas_dir) / col_rule["allowed_values_file"]
             with Path.open(fpath, "r", encoding="utf-8") as f:
                 allowed = {line.strip().lower() for line in f if line.strip()}
-            logging.debug(f"allowed values file: {fpath}")
-            logging.debug(f"allowed values: {allowed}")
             col_lower = df[col].astype("string").str.lower()
-            not_allowed = df[~col_lower.isin(allowed)]
-            if not not_allowed.empty:
-                incorrect_values = col_lower.tolist()
+            not_allowed = [x for x in col_lower if x not in allowed]
+            logging.debug(f"Allowed Values: {allowed}")
+            if len(not_allowed) > 0:
+                logging.debug(f"not_allowed: {set(not_allowed)}")
                 error = (
                     f"{col}: {len(not_allowed)} row(s) contain values not "
-                    "present in the reference file (check schemas/reference_lists/)."
+                    f"present in the reference file (check {fpath})."
                 )
                 logging.critical(error)
-                logging.critical("Incorrect value(s): %s", ", ".join(map(str, incorrect_values)))
+                logging.critical("Incorrect value(s): %s", ", ".join(map(str, set(not_allowed))))
                 errors.append(error)
 
         # Numeric range
@@ -389,7 +384,7 @@ def validate_dataframes(schema_file_map: dict, schemas_dir: str) -> list[dict]:
         df = read_table(mut_table_fp)
 
         table_errors = validate_single_dataframe(df, schema, schemas_dir)
-        if table_errors:
+        if len(table_errors) > 0:
             for err in table_errors:
                 logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
                 dataframes_status_dict_list.append(
