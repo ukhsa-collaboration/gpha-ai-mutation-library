@@ -551,7 +551,7 @@ def main():
         f"  --input {args.input}"
         f"  --tables-dir {args.tables_dir}"
         f"  --archive-dir {args.archive_dir}"
-        f"  --schema-dir {args.schema_dir}"
+        f"  --schema-dir {args.schemas_dir}"
         f"  --log-file {args.log_file}"
         f"  --log-level {args.log_level}"
         f"  --user {args.user}"
