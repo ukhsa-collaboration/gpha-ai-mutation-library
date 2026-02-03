@@ -8,13 +8,48 @@ There is a validation script that takes a new table(s), checks that the new data
 
 ## Repo Layout
 ```
+├── LICENSE
+├── pyproject.toml
+├── README.md
+├── schemas
+│   ├── ha_avian_influenza_mutation_table_gpha.yml
+│   ├── m_avian_influenza_mutation_table_gpha.yml
+│   ├── na_avian_influenza_mutation_table_gpha.yml
+│   ├── np_avian_influenza_mutation_table_gpha.yml
+│   ├── ns_avian_influenza_mutation_table_gpha.yml
+│   ├── pa_avian_influenza_mutation_table_gpha.yml
+│   ├── pb1_avian_influenza_mutation_table_gpha.yml
+│   ├── pb2_avian_influenza_mutation_table_gpha.yml
+│   └── reference_lists
+│       ├── aa_list.txt
+│       ├── feature_type_list.txt
+│       ├── host_type_list.txt
+│       ├── phenotypic_categories_list.txt
+│       └── segment_list.txt
+├── src
+│   └── mutation_table_updater
+│       ├── __init__.py
+│       └── validate_and_update.py
+├── tables
+│   ├── ha_avian_influenza_mutation_table_gpha.tsv
+│   ├── m_avian_influenza_mutation_table_gpha.tsv
+│   ├── na_avian_influenza_mutation_table_gpha.tsv
+│   ├── np_avian_influenza_mutation_table_gpha.tsv
+│   ├── ns_avian_influenza_mutation_table_gpha.tsv
+│   ├── pa_avian_influenza_mutation_table_gpha.tsv
+│   ├── pb1_avian_influenza_mutation_table_gpha.tsv
+│   └── pb2_avian_influenza_mutation_table_gpha.tsv
+├── tests[...]
+├── archive[...]
+└── updates.log
 
+[...] - Not shown for berevity
 ```
 ## Usage
 ### Accessing Tables
 Tables should be read directly from GitHub with an appropriate URL i.e
 ```
-<EXAMPLE>
+wget https://github.com/ukhsa-collaboration/gpha-ai-mutation-library/tree/main/tables/
 ```
 ### Updating Tables
 The validation script will:
@@ -27,9 +62,16 @@ The validation script will:
 
 #### Validate & update from a folder containing multiple tables
 ```
-python scripts/validate_and_update.py --input uploads/ --user "<USERNAME>"
+python \  
+    src/mutation_table_updater/validate_and_update.py \  
+    --input <TABLE_DIR>_avian_influenza_mutation_table.tsv \  
+    --user <USERNAME>  
 ```
+
 #### Validate & update a single file
 ```
-python scripts/validate_and_update.py --input uploads/mutations.csv --user "<USERNAME>"
+python \  
+    src/mutation_table_updater/validate_and_update.py \  
+    --input <SEGMENT_ID>_avian_influenza_mutation_table.tsv \  
+    --user <USERNAME>  
 ```
