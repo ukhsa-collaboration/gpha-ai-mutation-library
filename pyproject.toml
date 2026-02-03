@@ -9,7 +9,7 @@
         "numpy",
         "pandas",
         "pyyaml",
-        "pytest"
+        "pytest",
     ]
 
 [tool.setuptools.dynamic]
@@ -21,6 +21,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.scripts] # Update with main repo script here
+mutation_table_updater = "mutation_table_updater.validate_and_update:main"
+ 
 
 [tool.ruff.lint]
 select = [
