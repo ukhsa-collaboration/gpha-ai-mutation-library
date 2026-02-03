@@ -1,10 +1,10 @@
 # gpha-ai-mutation-library
-Library stores tables for avian influenza mutations of concern.
+Library stores and updates tables for avian influenza mutations of interest.
 
 ## Purpose
-A utility that provides tables describing reviewed avian influenza mutations, in tsv format, for use in downstream applications.
-This utility maintained current tables, as well as archived tables.
-There is a validation script that takes a new table(s), checks that the new data meets data requirements, and creates an updating table, whilst moving the original table into an archive with an appropriate datestamp. This repository maintains three archived table sets.
+A utility that provides tables describing avian influenza mutations, in tsv format, for use in downstream applications.
+
+There is a validation script that takes a new table(s), checks that the new data meets data requirements specified in the schema, and creates saves new tables, whilst moving the original table into an archive with an appropriate datestamp. This repository maintains three archived table sets.
 
 ## Repo Layout
 ```
@@ -43,7 +43,7 @@ There is a validation script that takes a new table(s), checks that the new data
 ├── archive[...]
 └── updates.log
 
-[...] - Not shown for berevity
+[...] - Not shown for brevity
 ```
 ## Usage
 ### Accessing Tables

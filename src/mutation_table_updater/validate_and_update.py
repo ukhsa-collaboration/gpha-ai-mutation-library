@@ -22,10 +22,14 @@ import pandas as pd
 import yaml
 
 # ---------- Config defaults ----------
-TABLES_DIR_DEFAULT = "tables"
-ARCHIVE_DIR_DEFAULT = "archive"
-SCHEMAS_DIR_DEFAULT = "schemas"
-LOG_FILE_DEFAULT = "updates.log"
+
+script_dir = Path(__file__).resolve().parent
+repo_dir = script_dir / ".." / ".."
+
+TABLES_DIR_DEFAULT = repo_dir / "tables"
+ARCHIVE_DIR_DEFAULT = repo_dir / "archive"
+SCHEMAS_DIR_DEFAULT = repo_dir / "schemas"
+LOG_FILE_DEFAULT = repo_dir / "updates.log"
 
 # ---------- Logging Setup -------------
 
@@ -424,8 +428,6 @@ def update_tables(
     dataframes_status_dict_list: list[dict],
     tables_dir: str,
     archive_dir: str,
-    user: str,
-    log_file: str,
 ) -> None:
     """Update tables that have passed validation."""
     # Check if validation passed
@@ -537,12 +539,20 @@ def main():
         f"\n########################################################################################################\n"
         f"User: {args.user} started table validation and update process.\n"
         f"########################################################################################################"
+        f"Arguments supplied: "
+        f"  --input {args.input}"
+        f"  --tables-dir {args.tables_dir}"
+        f"  --archive-dir {args.archive_dir}"
+        f"  --schema-dir {args.schema_dir}"
+        f"  --log-file {args.log_file}"
+        f"  --log-level {args.log_level}"
+        f"  --user {args.user}"
     )
 
     # Collect files and schemas
     files = list_candidate_files(args.input)
     if not files:
-        print("No candidate table files found in input.", file=sys.stderr)
+        logging.warning("No candidate table files found in input.", file=sys.stderr)
         sys.exit(2)
 
     schemas_map = load_schemas(args.schemas_dir)
@@ -559,9 +569,7 @@ def main():
     dataframes_status_dict_list = validate_dataframes(schema_file_map)
 
     # Save/Archive tables that passed validation
-    update_status = update_tables(
-        dataframes_status_dict_list, args.tables_dir, args.archive_dir, args.user, args.log_file
-    )
+    update_status = update_tables(dataframes_status_dict_list, args.tables_dir, args.archive_dir)
     if update_status is True:
         logging.info(f"Success. Tables validated and updated. Check log for details: {args.log_file}")
     else:
