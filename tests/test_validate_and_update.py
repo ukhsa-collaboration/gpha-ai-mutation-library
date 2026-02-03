@@ -351,9 +351,7 @@ def test_save_new_table_no_existing_table(setup_empty_dirs, correct_ha_tsv):
     update_status = vau.update_tables(
         [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}],
         tables_dir,
-        archive_dir,
-        "test@ukhsa.gov.uk",
-        "logfile.log",
+        archive_dir
     )
 
     assert update_status is True
@@ -380,11 +378,7 @@ def test_save_new_table_with_existing_table(setup_existing_table_dirs, correct_h
     tables_dir, archive_dir = setup_existing_table_dirs
 
     update_status = vau.update_tables(
-        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}],
-        tables_dir,
-        archive_dir,
-        "test@ukhsa.gov.uk",
-        "logfile.log",
+        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}], tables_dir, archive_dir
     )
 
     # expected files
@@ -424,11 +418,7 @@ def test_archive_cleanup(setup_full_archive, correct_ha_tsv):
     tables_dir, archive_dir = setup_full_archive
 
     update_status = vau.update_tables(
-        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}],
-        tables_dir,
-        archive_dir,
-        "test@ukhsa.gov.uk",
-        "logfile.log",
+        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}], tables_dir, archive_dir
     )
 
     # expected files

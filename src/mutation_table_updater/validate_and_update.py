@@ -22,10 +22,14 @@ import pandas as pd
 import yaml
 
 # ---------- Config defaults ----------
-TABLES_DIR_DEFAULT = "tables"
-ARCHIVE_DIR_DEFAULT = "archive"
-SCHEMAS_DIR_DEFAULT = "schemas"
-LOG_FILE_DEFAULT = "updates.log"
+
+script_dir = Path(__file__).resolve().parent
+repo_dir = script_dir / ".." / ".."
+
+TABLES_DIR_DEFAULT = repo_dir / "tables"
+ARCHIVE_DIR_DEFAULT = repo_dir / "archive"
+SCHEMAS_DIR_DEFAULT = repo_dir / "schemas"
+LOG_FILE_DEFAULT = repo_dir / "updates.log"
 
 # ---------- Logging Setup -------------
 
@@ -44,11 +48,19 @@ def setup_logging(log_filename, logging_level):
 
 
 # ---------- Helpers ----------
-def dir_path(path):
-    if Path(path).is_dir():
+def dir_path(path: str) -> str:
+    p = Path(path)
+
+    # If it already exists AND is a directory
+    if p.is_dir():
         return path
-    else:
-        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory")
+
+    # If it does not exist, create it
+    try:
+        p.mkdir(parents=True, exist_ok=True)
+        return path
+    except Exception as e:
+        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory and could not be created: {e}")
 
 
 def utc_now_iso() -> str:
@@ -249,7 +261,7 @@ def _type_check(series: pd.Series, typ: str) -> list[int]:
     return failures
 
 
-def validate_single_dataframe(df, schema) -> list[str]:
+def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     errors: list[str] = []
 
     # column rules
@@ -322,19 +334,21 @@ def validate_single_dataframe(df, schema) -> list[str]:
 
         # Allowed values (inline)
         if "allowed_values_file" in col_rule:
-            fpath = Path.cwd() / col_rule["allowed_values_file"]
+            logging.debug(f"col_rule: {col_rule}")
+            fpath = Path(schemas_dir) / col_rule["allowed_values_file"]
             with Path.open(fpath, "r", encoding="utf-8") as f:
                 allowed = {line.strip().lower() for line in f if line.strip()}
             col_lower = df[col].astype("string").str.lower()
-            not_allowed = df[~col_lower.isin(allowed)]
-            if not not_allowed.empty:
-                incorrect_values = col_lower.tolist()
+            not_allowed = [x for x in col_lower if x not in allowed]
+            logging.debug(f"Allowed Values: {allowed}")
+            if len(not_allowed) > 0:
+                logging.debug(f"not_allowed: {set(not_allowed)}")
                 error = (
                     f"{col}: {len(not_allowed)} row(s) contain values not "
-                    "present in the reference file (check schemas/reference_lists/)."
+                    f"present in the reference file (check {fpath})."
                 )
                 logging.critical(error)
-                logging.critical("Incorrect value(s): %s", ", ".join(map(str, incorrect_values)))
+                logging.critical("Incorrect value(s): %s", ", ".join(map(str, set(not_allowed))))
                 errors.append(error)
 
         # Numeric range
@@ -360,17 +374,17 @@ def validate_single_dataframe(df, schema) -> list[str]:
     return errors
 
 
-def validate_dataframes(schema_file_map: dict) -> list[dict]:
+def validate_dataframes(schema_file_map: dict, schemas_dir: str) -> list[dict]:
     """
     Return list of human-readable validation error messages.
     """
     dataframes_status_dict_list = []
     for mut_table_fp, schema in schema_file_map.items():
         logging.info("Validating table %s against schema %s.", Path(mut_table_fp).name, schema["name"])
-        df = read_table(mut_table_fp)
+        df = read_table(mut_table_fp, keep_default_na=False, na_values=[])
 
-        table_errors = validate_single_dataframe(df, schema)
-        if table_errors:
+        table_errors = validate_single_dataframe(df, schema, schemas_dir)
+        if len(table_errors) > 0:
             for err in table_errors:
                 logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
                 dataframes_status_dict_list.append(
@@ -424,8 +438,6 @@ def update_tables(
     dataframes_status_dict_list: list[dict],
     tables_dir: str,
     archive_dir: str,
-    user: str,
-    log_file: str,
 ) -> None:
     """Update tables that have passed validation."""
     # Check if validation passed
@@ -533,10 +545,24 @@ def main():
     # Set up Logging
     setup_logging(args.log_file, args.log_level)
 
+    logging.info(
+        f"\n########################################################################################################\n"
+        f"User: {args.user} started table validation and update process.\n"
+        f"########################################################################################################\n"
+        f"Arguments supplied: "
+        f"  --input {args.input}"
+        f"  --tables-dir {args.tables_dir}"
+        f"  --archive-dir {args.archive_dir}"
+        f"  --schema-dir {args.schemas_dir}"
+        f"  --log-file {args.log_file}"
+        f"  --log-level {args.log_level}"
+        f"  --user {args.user}"
+    )
+
     # Collect files and schemas
     files = list_candidate_files(args.input)
     if not files:
-        print("No candidate table files found in input.", file=sys.stderr)
+        logging.warning("No candidate table files found in input.", file=sys.stderr)
         sys.exit(2)
 
     schemas_map = load_schemas(args.schemas_dir)
@@ -550,19 +576,23 @@ def main():
     schema_file_map, skipped_files = map_schema_to_file(files, schemas_map, segment_names)
 
     # Validate tables with schemas
-    dataframes_status_dict_list = validate_dataframes(schema_file_map)
+    dataframes_status_dict_list = validate_dataframes(schema_file_map, args.schemas_dir)
 
     # Save/Archive tables that passed validation
-    update_status = update_tables(
-        dataframes_status_dict_list, args.tables_dir, args.archive_dir, args.user, args.log_file
-    )
+    update_status = update_tables(dataframes_status_dict_list, args.tables_dir, args.archive_dir)
     if update_status is True:
-        print(f"Success. Tables validated and updated.\nLog: {args.log_file}")
+        logging.info(f"Success. Tables validated and updated. Check log for details: {args.log_file}")
     else:
-        print(f"No tables were updated. Check log for details: {args.log_file}")
+        logging.warning(f"No tables were updated. Check log for details: {args.log_file}")
 
     # Clean up archive directory, if more than 3 files of the same segment name, deleted oldest (based on prefix)
     archive_cleanup(args.archive_dir)
+
+    logging.info(
+        f"\n########################################################################################################\n"
+        f"User: {args.user} completed table validation and update process.\n"
+        f"########################################################################################################"
+    )
 
 
 if __name__ == "__main__":
