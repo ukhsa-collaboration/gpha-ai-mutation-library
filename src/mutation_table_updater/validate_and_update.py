@@ -381,7 +381,7 @@ def validate_dataframes(schema_file_map: dict, schemas_dir: str) -> list[dict]:
     dataframes_status_dict_list = []
     for mut_table_fp, schema in schema_file_map.items():
         logging.info("Validating table %s against schema %s.", Path(mut_table_fp).name, schema["name"])
-        df = read_table(mut_table_fp)
+        df = read_table(mut_table_fp, keep_default_na=False, na_values=[])
 
         table_errors = validate_single_dataframe(df, schema, schemas_dir)
         if len(table_errors) > 0:

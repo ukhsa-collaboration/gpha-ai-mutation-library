@@ -2,7 +2,7 @@
 name: np
 filename: np_avian_influenza_mutation_table_gpha.tsv
 strict_columns: true
-primary_key: ["feature_type", "combination_name", "combination_id", "segment", "position_met1", "ref_AA", "alt_AA", "name", "subtype_tested", "subtype_notes", "phenotypic_consequences", "phenotypic_category", "concern_score", "confidence_score", "phenotypic_effect", "host_type", "host_taxon", "source", "references", "PMID", "additional_comments", "gpha_background", "gpha_known_muts"]
+primary_key: ["feature_type", "combination_name", "combination_id", "segment", "position_met1", "position_N2", "ref_AA", "alt_AA", "name", "subtype_tested", "subtype_notes", "phenotypic_consequences", "phenotypic_category", "concern_score", "confidence_score", "phenotypic_effect", "host_type", "host_taxon", "source", "references", "PMID", "additional_comments", "gpha_background", "gpha_known_muts"]
 
 columns:
   - name: feature_type
@@ -22,6 +22,9 @@ columns:
   - name: position_met1
     type: int
     required: true
+  - name: position_N2
+    type: int
+    required: false
   - name: ref_AA
     type: str
     required: true
@@ -33,11 +36,11 @@ columns:
   - name: name
     type: str
     required: true
-    pattern: "^[A-Z][0-9]+[A-Z]$"
+    pattern: "^[A-Z][0-9]+|X+[A-Z]$"
   - name: subtype_tested
     type: str
     required: false
-    pattern: "^H[0-9]+N[0-9]+$" # e.g. H5N1
+    pattern: "^H[0-9]+|X+N[0-9]+$" # e.g. H5N1
   - name: subtype_notes
     type: str
     required: false
