@@ -7,6 +7,61 @@ A utility that provides tables describing avian influenza mutations, in tsv form
 There is a validation script that takes a new table(s), checks that the new data meets data requirements specified in the schema, and creates saves new tables, whilst moving the original table into an archive with an appropriate datestamp. This repository maintains three archived table sets.
 
 ## Installation
+Clone repo and create environment:
+`git clone git@github.com:ukhsa-collaboration/gpha-ai-mutation-library.git`
+
+`conda env create -n gpha-ai-mutation-library`  
+`conda activate gpha-ai-mutation-library`
+
+
+Installation for users:
+```
+cd gpha-ai-mutation-library
+pip install .
+```
+
+Installation for developers (installs code in editable mode):
+```
+cd gpha-ai-mutation-library
+pip install --editable '.[dev]'
+```
+
+## Usage
+### Accessing Tables
+Tables should be read directly from GitHub with an appropriate URL i.e
+```
+wget https://github.com/ukhsa-collaboration/gpha-ai-mutation-library/tree/main/tables/
+```
+
+The original tables can be found in the GPHA SharePoint folder: /Projects/Avian_Flu/mutations/
+
+### Updating Tables
+The validation script will:
+    - Updates logs
+    - Take in either a table or folder containing tables. 
+    - Checks that the column headers are approriate
+    - Checks expected data in columns meets requirements
+    - If QC checks passed, archives original table(s)
+    - Creates new table in main directory
+
+#### Usage
+To get usage instructions: `mutation_table_updater --help`
+
+```
+usage: mutation_table_updater [-h] --input INPUT [--tables-dir TABLES_DIR] [--archive-dir ARCHIVE_DIR] [--schemas-dir SCHEMAS_DIR] [--log-file LOG_FILE]
+                              [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [--user USER]
+```
+
+#### Validate & update from a folder containing multiple tables
+```
+mutation_table_updater --input <TABLE_DIR> --user <USERNAME>  
+```
+
+#### Validate & update a single file
+```
+mutation_table_updater --input <SEGMENT_ID>_avian_influenza_mutation_table.tsv --user <USERNAME>  
+```
+
 
 ## Repo Layout
 ```
@@ -46,37 +101,4 @@ There is a validation script that takes a new table(s), checks that the new data
 └── updates.log
 
 [...] - Not shown for brevity
-```
-## Usage
-### Accessing Tables
-Tables should be read directly from GitHub with an appropriate URL i.e
-```
-wget https://github.com/ukhsa-collaboration/gpha-ai-mutation-library/tree/main/tables/
-```
-
-The original tables can be found in the GPHA SharePoint folder: /Projects/Avian_Flu/mutations/
-
-### Updating Tables
-The validation script will:
-    - Updates logs
-    - Take in either a table or folder containing tables. 
-    - Checks that the column headers are approriate
-    - Checks expected data in columns meets requirements
-    - If QC checks passed, archives original table(s)
-    - Creates new table in main directory
-
-#### Validate & update from a folder containing multiple tables
-```
-python \  
-    src/mutation_table_updater/validate_and_update.py \  
-    --input <TABLE_DIR>_avian_influenza_mutation_table.tsv \  
-    --user <USERNAME>  
-```
-
-#### Validate & update a single file
-```
-python \  
-    src/mutation_table_updater/validate_and_update.py \  
-    --input <SEGMENT_ID>_avian_influenza_mutation_table.tsv \  
-    --user <USERNAME>  
 ```
