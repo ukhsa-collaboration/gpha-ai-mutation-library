@@ -377,11 +377,11 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     def required_values(df, col) -> str:
         series = df[col]
         null_idx = list(series[series.isna()].index)
-        logging.debug(f"Check items with null values: {null_idx}")
         if null_idx:
+            logging.debug(f"Check items with null values: {null_idx}")
             error = f"{col}: {len(null_idx)} required values are null"
             logging.critical(error)
-            return ("crirical", error)
+            return ("Critical", error)
 
     # Required columns
     required_column_error = required_columns(df, schema)
@@ -422,10 +422,10 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
                     errors.append(("warning", error))
 
         # Regex
-        logging.debug(f"Col Rule: {col_rule}")
-        if ("pattern" in col_rule) and ("required" in col_rule):
+        if "pattern" in col_rule:
             reg = re.compile(col_rule["pattern"])
             logging.info("Checking regex for column %s with pattern %s", col, col_rule["pattern"])
+
             bad_rows = [i for i, v in series.items() if not (pd.isna(v) or reg.match(str(v)))]
             if bad_rows:
                 if col_rule["required"] is True:
@@ -437,62 +437,57 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
                     logging.warning(error)
                     errors.append(("warning", error))
 
-    #     # Allowed values (inline)
-    #     if "allowed_values_file" in col_rule:
-    #         logging.debug(f"col_rule: {col_rule}")
-    #         fpath = Path(schemas_dir) / col_rule["allowed_values_file"]
-    #         with Path.open(fpath, "r", encoding="utf-8") as f:
-    #             allowed = {line.strip().lower() for line in f if line.strip()}
-    #         col_lower = df[col].astype("string").str.lower()
-    #         not_allowed = [x for x in col_lower if x not in allowed]
-    #         logging.debug(f"Allowed Values: {allowed}")
-    #         if len(not_allowed) > 0:
-    #             logging.debug(f"not_allowed: {set(not_allowed)}")
-    #             error = (
-    #                 f"{col}: {len(not_allowed)} row(s) contain values not "
-    #                 f"present in the reference file (check {fpath})."
-    #             )
-    #             logging.critical(error)
-    #             logging.critical("Incorrect value(s): %s", ", ".join(map(str, set(not_allowed))))
-    #             errors.append(error)
+        # Allowed values (inline)
+        if "allowed_values_file" in col_rule:
+            logging.debug(f"col_rule: {col_rule}")
+            # Read in allowed values file
+            fpath = Path(schemas_dir) / col_rule["allowed_values_file"]
+            with Path.open(fpath, "r", encoding="utf-8") as f:
+                allowed = {line.strip().lower() for line in f if line.strip()}
+            col_lower = df[col].astype("string").str.lower()
 
-    #     # if schema expects numeric values
-    #     if col_rule.get("type") in ("int", "float"):
-    #         # check if all values are numeric in values
-    #         values = df[col_rule["name"]].tolist()
+            # Values not present in the allowed values file
+            not_allowed = [x for x in col_lower if x not in allowed]
 
-    #         # Classify values present (all_numeric, numeric_or_empty, numeric_or_empty)
-    #         values_classification = classify_numeric_list(values)
+            if len(not_allowed) > 0:
+                logging.debug(f"Values not allowed: {not_allowed}")
+                error = (
+                    f"{col}: {len(not_allowed)} row(s) contain values not "
+                    f"present in the reference file (check {fpath})."
+                )
+                if col_rule["required"] is True:
+                    logging.critical("Column %s has incorrect value(s): %s", col, ", ".join(map(str, set(not_allowed))))
+                    errors.append(error)
 
-    #         # if contains null values
-    #         if (values_classification == "numeric_or_empty") or (values_classification == "all_numeric"):
-    #             # Doesn't matter if it contains null values
-    #             if (values_classification == "numeric_or_empty") and (col_rule.get("required", False)):
-    #                 msg = f"Column {col} contains empty/null values. Values observed: {set(values)}"
-    #                 logging.warning(msg)
-    #                 values = remove_empty(values)
-    #             # Does matter
-    #             else:
-    #                 msg = f"Column {col} cannot contain empty/null values. Values observed: {set(values)}"
-    #                 logging.critical(msg)
-    #                 errors.append(msg)
+        # if schema expects numeric values
+        if col_rule.get("type") in ("int", "float"):
+            # Split values by numeric and non-numeric
+            nums = []
+            non_nums = []
 
-    #             # If there are min/max values
-    #             if col_rule.get("min") and col_rule.get("max"):
-    #                 lo = int(col_rule.get("min"))
-    #                 hi = int(col_rule.get("max"))
-    #                 if (lo is not None) & (hi is not None):
-    #                     less_than = [x for x in values if x < lo]
-    #                     greater_than = [x for x in values if x > hi]
-    #                     if len(greater_than) > 0 or len(less_than) > 0:
-    #                         error = f"Value outside bounds ({lo} - {hi}) for column '{col}'. check values: {values}"
-    #                         logging.critical(error)
-    #                         errors.append(error)
+            for item in series_clean.to_list():
+                if isinstance(item, (int, float)):
+                    nums.append(item)
+                else:
+                    non_nums.append(item)
 
-    #         elif values_classification == "contains_non_numeric":
-    #             msg = f"Column {col} cannot contain non-numeric values. Values observed: {set(values)}"
-    #             logging.critical(msg)
-    #             error.append(msg)
+            # if it contains non-numeric values
+            if len(non_nums) > 0:
+                msg = f"Column {col} cannot contain empty/null values. Values observed: {set(values)}"
+                logging.critical(msg)
+                errors.append(msg)
+            else:
+                # If there are min/max values
+                if col_rule.get("min") and col_rule.get("max"):
+                    lo = int(col_rule.get("min"))
+                    hi = int(col_rule.get("max"))
+                    if (lo is not None) & (hi is not None):
+                        less_than = [x for x in series_clean.to_list() if x < lo]
+                        greater_than = [x for x in series_clean.to_list() if x > hi]
+                        if len(greater_than) > 0 or len(less_than) > 0:
+                            error = f"Value outside bounds ({lo} - {hi}) for column '{col}'. check values: {series_clean.to_list()}"
+                            logging.critical(error)
+                            errors.append(error)
 
     return errors
 
@@ -509,28 +504,33 @@ def validate_dataframes(schema_file_map: dict, schemas_dir: str) -> list[dict]:
         table_errors = validate_single_dataframe(df, schema, schemas_dir)
         table_errors_cleaned = [x for x in table_errors if x is not None]
         logging.debug(f"table_errors list: {table_errors_cleaned}")
-        breakpoint()
-        # if len(table_errors_cleaned) > 0:
-        #     for err in table_errors_cleaned:
-        #         logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
-        #         dataframes_status_dict_list.append(
-        #             {
-        #                 "mutation_df": df,
-        #                 "segment": schema["name"],
-        #                 "errors": table_errors_cleaned,
-        #                 "validation_status": "Failed",
-        #             }
-        #         )
-        # else:
-        #     logging.info("Table %s passed validation.", Path(mut_table_fp).name)
-        #     dataframes_status_dict_list.append(
-        #         {
-        #             "mutation_df": df,
-        #             "mutation_table_fp": mut_table_fp,
-        #             "segment": schema["name"],
-        #             "validation_status": "Passed",
-        #         }
-        #     )
+
+        # check if there are any critical issues in errors
+        # Format of errors shoud be [(error_type, error_msg), ()]
+        critical_errors = [t for t in table_errors_cleaned if t[0] == "Critical"]
+        if len(critical_errors) > 0:
+            logging.critical(f"There are {len(critical_errors)} critical errors. Check logs and tables and try again.")
+            for err in table_errors_cleaned:
+                logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
+                dataframes_status_dict_list.append(
+                    {
+                        "mutation_df": df,
+                        "segment": schema["name"],
+                        "errors": table_errors_cleaned,
+                        "validation_status": "Failed",
+                    }
+                )
+        else:
+            logging.info("Table %s passed validation.", Path(mut_table_fp).name)
+            dataframes_status_dict_list.append(
+                {
+                    "mutation_df": df,
+                    "mutation_table_fp": mut_table_fp,
+                    "segment": schema["name"],
+                    "errors": table_errors_cleaned,
+                    "validation_status": "Passed",
+                }
+            )
     return dataframes_status_dict_list
 
 
@@ -573,51 +573,36 @@ def update_tables(
         else:
             logging.warning("No tables passed validation. No updates made.")
             return False  # Exit function if no tables passed validation
+    logging.debug(f"validated tables: {validated_tables}")
     if validated_tables:
         # Check if directories exists
         for dir in [tables_dir, archive_dir]:
             if not Path(dir).exists():
                 ensure_dir(dir)
                 logging.info("Created directory: %s", dir)
-                # Copy new file to tables directory
-                for validated_table in validated_tables:
-                    copy_table(validated_table[0], tables_dir)
-                    logging.info("Copied %s to %s", validated_table[0], tables_dir)
-                    return True
             else:
                 logging.info("Directory exists: %s", dir)
-                # Identify if segment table exists in tables_dir
-                for validated_table in validated_tables:
-                    segment_name = validated_table[1]
-                    new_table_path = validated_table[0]
-                    existing_seg_tables = list(Path(tables_dir).glob(f"{segment_name}*"))
-                    if not existing_seg_tables:
-                        copy_table(new_table_path, tables_dir)
-                        logging.info("Copied %s to %s", new_table_path, tables_dir)
-                        return True
-                    else:
-                        if len(existing_seg_tables) == 1:
-                            # Move existing file to archive_dir/
-                            logging.info("Archiving existing table(s) for segment: %s", segment_name)
-                            date_str = dt.date.today().isoformat()
-                            archive_file_name = "_".join([date_str, existing_seg_tables[0].name])
-                            copy_table(existing_seg_tables[0], archive_dir, archive_file_name)
-                            logging.info(
-                                "Archived existing table %s to %s",
-                                existing_seg_tables[0],
-                                str(Path(archive_dir) / archive_file_name),
-                            )
-                            # Save new file to tables directory
-                            copy_table(new_table_path, tables_dir)
-                            logging.info("Copied %s to %s", new_table_path, tables_dir)
-                            return True
-                        else:
-                            logging.critical(
-                                "Multiple existing tables found for segment %s in %s. Please resolve manually.",
-                                segment_name,
-                                tables_dir,
-                            )
-                            return False
+                # Get existing files in folder
+
+        existing_files = [p for p in Path(tables_dir).iterdir() if p.is_file()]
+        existing_filenames = [p.name for p in Path(tables_dir).iterdir() if p.is_file()]
+        logging.debug(f"Existing Files: {existing_filenames}")
+        # check if filenames match:
+
+        # Identify if segment table exists in tables_dir
+        for validated_table in validated_tables:
+            logging.debug(f"Copying new file to tables directory {validated_table[0]}")
+            segment_name = validated_table[1]
+            new_table_path = validated_table[0]
+            if Path(new_table_path).name in existing_filenames:
+                # Archive existing file
+                date_str = dt.date.today().isoformat()
+                archive_file_name = "_".join([date_str, Path(new_table_path).name])
+                copy_table(Path(tables_dir) / Path(new_table_path).name, archive_dir, archive_file_name)
+                # Copy new file
+                copy_table(new_table_path, tables_dir)
+            else:
+                copy_table(new_table_path, tables_dir)
 
 
 def archive_cleanup(archive_dir: str) -> None:

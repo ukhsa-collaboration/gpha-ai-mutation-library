@@ -64,7 +64,7 @@ columns:
   - name: name
     type: str
     required: true
-    pattern: "^[aA-zZ][0-9]+[aA-zZ]$"
+    pattern: "^(?:[A-Za-z][0-9]+[A-Za-z]+)$"
   - name: subtype_tested
     type: str
     required: false
@@ -109,19 +109,19 @@ columns:
     required: false
   - name: laninamivir_resistance
     type: str
-    required: true
+    required: false
     allowed_values: ["Y", "N", Null]
   - name: oseltamivir_resistance
     type: str
-    required: true
+    required: false
     allowed_values: ["Y", "N", Null]
   - name: peramivir_resistance
     type: str
-    required: true
+    required: false
     allowed_values: ["Y", "N", Null]  
   - name: zanamivir_resistance
     type: str
-    required: true
+    required: false
     allowed_values: ["Y", "N", Null]
   - name: gpha_background
     type: str

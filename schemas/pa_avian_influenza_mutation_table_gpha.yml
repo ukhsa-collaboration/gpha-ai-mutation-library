@@ -33,7 +33,7 @@ columns:
   - name: name
     type: str
     required: true
-    pattern: "^[aA-zZ][0-9]+[aA-zZ]$"
+    pattern: "^(?:[A-Za-z][0-9]+[A-Za-z]+)$"
   - name: subtype_tested
     type: str
     required: false

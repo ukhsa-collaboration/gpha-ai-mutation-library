@@ -44,7 +44,7 @@ columns:
   - name: name
     type: str
     required: true
-    pattern: "^(?:[A-Z][0-9]+[A-Z]|del)$"
+    pattern: "^(?:[A-Za-z][0-9]+[A-Za-z]+)$" #A1B or A1del
   - name: subtype_tested
     type: str
     required: false
