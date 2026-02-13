@@ -6,6 +6,8 @@ A utility that provides tables describing avian influenza mutations, in tsv form
 
 There is a validation script that takes a new table(s), checks that the new data meets data requirements specified in the schema, and creates saves new tables, whilst moving the original table into an archive with an appropriate datestamp. This repository maintains three archived table sets.
 
+## Installation
+
 ## Repo Layout
 ```
 ├── LICENSE
@@ -51,6 +53,9 @@ Tables should be read directly from GitHub with an appropriate URL i.e
 ```
 wget https://github.com/ukhsa-collaboration/gpha-ai-mutation-library/tree/main/tables/
 ```
+
+The original tables can be found in the GPHA SharePoint folder: /Projects/Avian_Flu/mutations/
+
 ### Updating Tables
 The validation script will:
     - Updates logs

@@ -1,10 +1,14 @@
+alpha1_adaptor_protein_binding
 antiviral_response
 antiviral_susceptibility
 antivirus_response
+avian_np_reactivity
 binding_affinity
 fusion_ph
+IFN_response
 infectivity
 lethality
+mx_resistance
 pathogenicity
 polymerase_activity
 replication

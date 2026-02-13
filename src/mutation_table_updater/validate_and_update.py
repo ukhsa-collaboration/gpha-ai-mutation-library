@@ -82,15 +82,58 @@ def sha256_file(path: str) -> str:
     return h.hexdigest()
 
 
-def read_table(path: str) -> pd.DataFrame:
-    ext = Path(path).suffix
-    if ext in [".csv"]:
-        return pd.read_csv(path)
+def read_table(path: str, *, ignore_string_NA: bool = True) -> pd.DataFrame:
+    """
+    Read a table and (optionally) treat the literal 'NA' as a normal string (not missing).
+
+    Parameters
+    ----------
+    path : str
+        Path to the file (.csv, .tsv/.tab, .xlsx/.xls)
+    ignore_string_NA : bool, default True
+        If True, the string "NA" will NOT be interpreted as missing.
+        Other common missing tokens will still be treated as missing.
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    ext = Path(path).suffix.lower()
+
+    # Define which tokens should be treated as missing (excluding "NA")
+    # You can adjust this list to your needs.
+    user_na_values = {
+        "",  # empty string cells (CSV fields will still parse empty to NaN)
+        "N/A",
+        "n/a",
+        "NaN",
+        "nan",
+        "NULL",
+        "null",
+        "#N/A",
+        "#NA",
+        "Inf",
+        "-Inf",
+    }
+
+    # When ignoring "NA" as null, we must disable pandas' default NA list and supply our own.
+    read_kwargs = {}
+    if ignore_string_NA:
+        read_kwargs.update(
+            {
+                "keep_default_na": False,  # turn off pandas' built-in NA tokens (which include "NA")
+                "na_values": list(user_na_values),
+            }
+        )
+    # else: leave defaults so "NA" will be interpreted as missing as usual
+
+    if ext == ".csv":
+        return pd.read_csv(path, **read_kwargs)
     elif ext in [".tsv", ".tab"]:
-        return pd.read_csv(path, sep="\t")
+        return pd.read_csv(path, sep="\t", **read_kwargs)
     elif ext in [".xlsx", ".xls"]:
         engine = "openpyxl" if ext == ".xlsx" else "xlrd"
-        return pd.read_excel(path, engine=engine)
+        return pd.read_excel(path, engine=engine, **read_kwargs)
     else:
         raise ValueError(f"Unsupported file extension: {ext}")
 
@@ -261,10 +304,52 @@ def _type_check(series: pd.Series, typ: str) -> list[int]:
     return failures
 
 
+# check if null/none values
+def is_empty(v):
+    return v is None or (isinstance(v, str) and v.strip().lower() in ("", "none", "null"))
+
+
+# Check iof all are numeric
+def is_numeric(v):
+    try:
+        float(v)
+        return True
+    except (TypeError, ValueError):
+        return False
+
+
+# Classify values
+def classify_numeric_list(values):
+    # Remove empty values for numeric checking
+    non_empty = [v for v in values if not is_empty(v)]
+
+    # Case 1: all empty -> treat as numeric-or-empty
+    if len(non_empty) == 0:
+        return "numeric_or_empty"
+
+    # Case 2: check if all non-empty values are numeric
+    if all(is_numeric(v) for v in non_empty):
+        # If original list had empties, this is numeric-or-empty
+        if any(is_empty(v) for v in values):
+            return "numeric_or_empty"
+        else:
+            return "all_numeric"
+
+    # Case 3: some values non-numeric
+    return "contains_non_numeric"
+
+
+# Remove null values
+def remove_empty(values):
+    return [v for v in values if not (v is None or (isinstance(v, str) and v.strip().lower() in ("", "none", "null")))]
+
+
 def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     errors: list[str] = []
 
-    # column rules
+    logging.debug(f"schema: {schema}")
+
+    # # column rules
     def required_columns(df: pd.DataFrame, schema: dict) -> str:
         required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
         missing_cols = []
@@ -289,10 +374,31 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     def required_values(df, col) -> str:
         series = df[col]
         null_idx = list(series[series.isna()].index)
+        logging.debug(f"Check items with null values: {null_idx}")
         if null_idx:
             error = f"{col}: {len(null_idx)} required values are null"
             logging.critical(error)
             return error
+
+    def required_values_v2(df: pd.DataFrame, schema: dict) -> str:
+        cols_w_required_values = [col["name"] for col in schema["columns"] if col.get("required") is True]
+        cols_with_missing = df.isna().any()
+        logging.debug(cols_with_missing)
+        # List columns that contain missing/empty cells
+        missing_cols_list = cols_with_missing[cols_with_missing].index.tolist()
+        logging.debug(f"Columns requiring values: {cols_w_required_values}")
+        logging.debug(f"Columns missing data: {missing_cols_list}")
+
+        cols_requiring_values_error = [x for x in cols_w_required_values if x in missing_cols_list]
+        logging.critical(f"The following columns are missing values in every row: {cols_requiring_values_error}")
+        # required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
+        # series = df[col]
+        # null_idx = list(series[series.isna()].index)
+        # logging.debug(f"Check items with null values: {null_idx}")
+        # if null_idx:
+        #     error = f"{col}: {len(null_idx)} required values are null"
+        #     logging.critical(error)
+        #     return error
 
     # Required columns
     required_column_error = required_columns(df, schema)
@@ -302,75 +408,105 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     unexpected_column_error = unexpected_columns(df, schema)
     errors.append(unexpected_column_error)
 
+    required_values_v2(df, schema)
+    breakpoint()
+
     # Per-column checks
     for col_rule in schema.get("columns", []):
         col = col_rule["name"]
-        series = df[col]
         if col not in df.columns:
             # Already flagged if required; skip otherwise
+            logging.warning(f"Column {col} not present in table.")
             continue
+        series = df[col]
         # Type checks
         # Ensure columns which expect values are not null/empty
         if col_rule.get("required"):
             required_value_error = required_values(df, col)
             errors.append(required_value_error)
 
-        if "type" in col_rule:
-            bad_idx = _type_check(series, col_rule["type"])
-            if bad_idx:
-                error = f"{col}: {len(bad_idx)} rows fail type '{col_rule['type']}'"
-                logging.critical(error)
-                errors.append(error)
+    #     if "type" in col_rule:
+    #         bad_idx = _type_check(series, col_rule["type"])
+    #         # if row is null and col_rule["required"] is False, ignore
 
-        # Regex
-        if "pattern" in col_rule:
-            reg = re.compile(col_rule["pattern"])
-            logging.info("Checking regex for column %s with pattern %s", col, col_rule["pattern"])
-            bad_rows = [i for i, v in series.items() if not (pd.isna(v) or reg.match(str(v)))]
-            if bad_rows:
-                error = f"{col}: {len(bad_rows)} rows fail regex '{col_rule['pattern']}'"
-                logging.critical(error)
-                errors.append(error)
+    #         if bad_idx and (col_rule["required"] is True):
+    #             logging.debug(f"Col Rule: {col_rule}")
+    #             logging.debug(f"Failures: {bad_idx}")
+    #             logging.debug(f"Series: {list(series)}")
+    #             error = f"{col}: {len(bad_idx)} rows fail type '{col_rule['type']}'"
+    #             logging.critical(error)
+    #             errors.append(error)
 
-        # Allowed values (inline)
-        if "allowed_values_file" in col_rule:
-            logging.debug(f"col_rule: {col_rule}")
-            fpath = Path(schemas_dir) / col_rule["allowed_values_file"]
-            with Path.open(fpath, "r", encoding="utf-8") as f:
-                allowed = {line.strip().lower() for line in f if line.strip()}
-            col_lower = df[col].astype("string").str.lower()
-            not_allowed = [x for x in col_lower if x not in allowed]
-            logging.debug(f"Allowed Values: {allowed}")
-            if len(not_allowed) > 0:
-                logging.debug(f"not_allowed: {set(not_allowed)}")
-                error = (
-                    f"{col}: {len(not_allowed)} row(s) contain values not "
-                    f"present in the reference file (check {fpath})."
-                )
-                logging.critical(error)
-                logging.critical("Incorrect value(s): %s", ", ".join(map(str, set(not_allowed))))
-                errors.append(error)
+    #     # Regex
+    #     logging.debug(f"Col Rule: {col_rule}")
+    #     if "pattern" in col_rule:
+    #         reg = re.compile(col_rule["pattern"])
+    #         logging.info("Checking regex for column %s with pattern %s", col, col_rule["pattern"])
+    #         bad_rows = [i for i, v in series.items() if not (pd.isna(v) or reg.match(str(v)))]
+    #         if bad_rows:
+    #             error = f"{col}: {len(bad_rows)} rows fail regex '{col_rule['pattern']}'"
+    #             logging.critical(error)
+    #             errors.append(error)
 
-        # Numeric range
-        if (col_rule.get("type") in ("int", "float")) and (col_rule.get("min") and col_rule.get("max")):
-            lo = col_rule.get("min")
-            hi = col_rule.get("max")
-            values = df[col_rule["name"]].tolist()
-            if all(isinstance(x, (int, float)) for x in values):
-                # convert all values to float for simplicity
-                if (lo is not None) & (hi is not None):
-                    less_than = [x for x in values if x < lo]
-                    greater_than = [x for x in values if x > hi]
-                    if len(greater_than) > 0 or len(less_than) > 0:
-                        error = f"Value outside bounds ({lo} - {hi}) for column '{col}'. check values: {values}"
-                        logging.critical(error)
-                        errors.append(error)
-            else:
-                error = f"Non-numeric value found in numeric range check for column '{col}'."
-                logging.critical(error)
-                errors.append(error)
+    #     # Allowed values (inline)
+    #     if "allowed_values_file" in col_rule:
+    #         logging.debug(f"col_rule: {col_rule}")
+    #         fpath = Path(schemas_dir) / col_rule["allowed_values_file"]
+    #         with Path.open(fpath, "r", encoding="utf-8") as f:
+    #             allowed = {line.strip().lower() for line in f if line.strip()}
+    #         col_lower = df[col].astype("string").str.lower()
+    #         not_allowed = [x for x in col_lower if x not in allowed]
+    #         logging.debug(f"Allowed Values: {allowed}")
+    #         if len(not_allowed) > 0:
+    #             logging.debug(f"not_allowed: {set(not_allowed)}")
+    #             error = (
+    #                 f"{col}: {len(not_allowed)} row(s) contain values not "
+    #                 f"present in the reference file (check {fpath})."
+    #             )
+    #             logging.critical(error)
+    #             logging.critical("Incorrect value(s): %s", ", ".join(map(str, set(not_allowed))))
+    #             errors.append(error)
 
-    errors = [x for x in errors if x is not None]
+    #     # if schema expects numeric values
+    #     if col_rule.get("type") in ("int", "float"):
+    #         # check if all values are numeric in values
+    #         values = df[col_rule["name"]].tolist()
+    #         logging.debug(values)
+    #         breakpoint()
+
+    #         # Classify values present (all_numeric, numeric_or_empty, numeric_or_empty)
+    #         values_classification = classify_numeric_list(values)
+
+    #         # if contains null values
+    #         if (values_classification == "numeric_or_empty") or (values_classification == "all_numeric"):
+    #             # Doesn't matter if it contains null values
+    #             if (values_classification == "numeric_or_empty") and (col_rule.get("required", False)):
+    #                 msg = f"Column {col} contains empty/null values. Values observed: {set(values)}"
+    #                 logging.warning(msg)
+    #                 values = remove_empty(values)
+    #             # Does matter
+    #             else:
+    #                 msg = f"Column {col} cannot contain empty/null values. Values observed: {set(values)}"
+    #                 logging.critical(msg)
+    #                 errors.append(msg)
+
+    #             # If there are min/max values
+    #             if col_rule.get("min") and col_rule.get("max"):
+    #                 lo = int(col_rule.get("min"))
+    #                 hi = int(col_rule.get("max"))
+    #                 if (lo is not None) & (hi is not None):
+    #                     less_than = [x for x in values if x < lo]
+    #                     greater_than = [x for x in values if x > hi]
+    #                     if len(greater_than) > 0 or len(less_than) > 0:
+    #                         error = f"Value outside bounds ({lo} - {hi}) for column '{col}'. check values: {values}"
+    #                         logging.critical(error)
+    #                         errors.append(error)
+
+    #         elif values_classification == "contains_non_numeric":
+    #             msg = f"Column {col} cannot contain non-numeric values. Values observed: {set(values)}"
+    #             logging.critical(msg)
+    #             error.append(msg)
+
     return errors
 
 
@@ -381,7 +517,7 @@ def validate_dataframes(schema_file_map: dict, schemas_dir: str) -> list[dict]:
     dataframes_status_dict_list = []
     for mut_table_fp, schema in schema_file_map.items():
         logging.info("Validating table %s against schema %s.", Path(mut_table_fp).name, schema["name"])
-        df = read_table(mut_table_fp, keep_default_na=False, na_values=[])
+        df = read_table(mut_table_fp)
 
         table_errors = validate_single_dataframe(df, schema, schemas_dir)
         if len(table_errors) > 0:
