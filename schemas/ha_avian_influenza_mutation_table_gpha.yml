@@ -20,12 +20,12 @@ columns:
     allowed_values_file: "reference_lists/segment_list.txt"
   - name: position_met1
     type: int
-    required: false
+    required: true
     min: 1
     max: 568
   - name: position_H5
     type: int
-    required: false
+    required: true
     min: 1
     max: 552
   - name: position_H3
@@ -44,11 +44,11 @@ columns:
   - name: name
     type: str
     required: true
-    pattern: "^[A-Z][0-9]+|X+[A-Z][0-9]$"
+    pattern: "^(?:[A-Za-z][0-9]+[A-Za-z]+)$" #A1B or A1del
   - name: subtype_tested
     type: str
     required: false
-    pattern: "^H[0-9]+|X+N[0-9]+$" # e.g. H5N1
+    pattern: "^H([0-9]+|[Xx]+)N([0-9]+|[Xx]+)$" # e.g. H5N1
   - name: subtype_notes
     type: str
     required: false
