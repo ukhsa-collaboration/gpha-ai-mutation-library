@@ -347,8 +347,6 @@ def remove_empty(values):
 def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     errors: list[str] = []
 
-    logging.debug(f"schema: {schema}")
-
     # # column rules
     def required_columns(df: pd.DataFrame, schema: dict) -> str:
         required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
@@ -356,10 +354,15 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
         for col in required_cols:
             if col not in df.columns:
                 missing_cols.append(col)
+
         if len(missing_cols) > 0:
             error = f"Missing required column: {', '.join(missing_cols)}"
-            logging.warning(error)
-            return error
+            if schema.get("strict_columns", False):
+                logging.warning(error)
+                return ("warning", error)
+            else:
+                logging.warning(error)
+                return ("critical", error)
 
     def unexpected_columns(df: pd.DataFrame, schema: dict) -> str:
         allowed_cols = [c["name"] for c in schema.get("columns", [])]
@@ -368,7 +371,7 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
             if extra:
                 error = f"Unexpected columns present: {', '.join(extra)}"
                 logging.warning(error)
-                return error
+                return ("warning", error)
 
     # Columns that require non-null values
     def required_values(df, col) -> str:
@@ -378,27 +381,7 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
         if null_idx:
             error = f"{col}: {len(null_idx)} required values are null"
             logging.critical(error)
-            return error
-
-    def required_values_v2(df: pd.DataFrame, schema: dict) -> str:
-        cols_w_required_values = [col["name"] for col in schema["columns"] if col.get("required") is True]
-        cols_with_missing = df.isna().any()
-        logging.debug(cols_with_missing)
-        # List columns that contain missing/empty cells
-        missing_cols_list = cols_with_missing[cols_with_missing].index.tolist()
-        logging.debug(f"Columns requiring values: {cols_w_required_values}")
-        logging.debug(f"Columns missing data: {missing_cols_list}")
-
-        cols_requiring_values_error = [x for x in cols_w_required_values if x in missing_cols_list]
-        logging.critical(f"The following columns are missing values in every row: {cols_requiring_values_error}")
-        # required_cols = [c["name"] for c in schema.get("columns", []) if c.get("required")]
-        # series = df[col]
-        # null_idx = list(series[series.isna()].index)
-        # logging.debug(f"Check items with null values: {null_idx}")
-        # if null_idx:
-        #     error = f"{col}: {len(null_idx)} required values are null"
-        #     logging.critical(error)
-        #     return error
+            return ("crirical", error)
 
     # Required columns
     required_column_error = required_columns(df, schema)
@@ -408,9 +391,6 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     unexpected_column_error = unexpected_columns(df, schema)
     errors.append(unexpected_column_error)
 
-    required_values_v2(df, schema)
-    breakpoint()
-
     # Per-column checks
     for col_rule in schema.get("columns", []):
         col = col_rule["name"]
@@ -418,35 +398,44 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
             # Already flagged if required; skip otherwise
             logging.warning(f"Column {col} not present in table.")
             continue
+
         series = df[col]
-        # Type checks
+
         # Ensure columns which expect values are not null/empty
         if col_rule.get("required"):
             required_value_error = required_values(df, col)
             errors.append(required_value_error)
 
-    #     if "type" in col_rule:
-    #         bad_idx = _type_check(series, col_rule["type"])
-    #         # if row is null and col_rule["required"] is False, ignore
+        # remove null values (already flagged if it's an issue)
+        series_clean = df.dropna(subset=[col])[col]
 
-    #         if bad_idx and (col_rule["required"] is True):
-    #             logging.debug(f"Col Rule: {col_rule}")
-    #             logging.debug(f"Failures: {bad_idx}")
-    #             logging.debug(f"Series: {list(series)}")
-    #             error = f"{col}: {len(bad_idx)} rows fail type '{col_rule['type']}'"
-    #             logging.critical(error)
-    #             errors.append(error)
+        # Type checks
+        if "type" in col_rule:
+            bad_idx = _type_check(series_clean, col_rule["type"])
+            if len(bad_idx) > 0:
+                error = f"{col}: {len(bad_idx)} rows fail type '{col_rule['type']}'"
+                if bad_idx and (col_rule["required"] is True):
+                    logging.critical(error)
+                    errors.append(("critical", error))
+                else:
+                    logging.warning(error)
+                    errors.append(("warning", error))
 
-    #     # Regex
-    #     logging.debug(f"Col Rule: {col_rule}")
-    #     if "pattern" in col_rule:
-    #         reg = re.compile(col_rule["pattern"])
-    #         logging.info("Checking regex for column %s with pattern %s", col, col_rule["pattern"])
-    #         bad_rows = [i for i, v in series.items() if not (pd.isna(v) or reg.match(str(v)))]
-    #         if bad_rows:
-    #             error = f"{col}: {len(bad_rows)} rows fail regex '{col_rule['pattern']}'"
-    #             logging.critical(error)
-    #             errors.append(error)
+        # Regex
+        logging.debug(f"Col Rule: {col_rule}")
+        if ("pattern" in col_rule) and ("required" in col_rule):
+            reg = re.compile(col_rule["pattern"])
+            logging.info("Checking regex for column %s with pattern %s", col, col_rule["pattern"])
+            bad_rows = [i for i, v in series.items() if not (pd.isna(v) or reg.match(str(v)))]
+            if bad_rows:
+                if col_rule["required"] is True:
+                    error = f"{col}: {len(bad_rows)} rows fail regex '{col_rule['pattern']}'"
+                    logging.critical(error)
+                    errors.append(("critical", error))
+                else:
+                    error = f"{col}: {len(bad_rows)} rows fail regex '{col_rule['pattern']}'"
+                    logging.warning(error)
+                    errors.append(("warning", error))
 
     #     # Allowed values (inline)
     #     if "allowed_values_file" in col_rule:
@@ -471,8 +460,6 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
     #     if col_rule.get("type") in ("int", "float"):
     #         # check if all values are numeric in values
     #         values = df[col_rule["name"]].tolist()
-    #         logging.debug(values)
-    #         breakpoint()
 
     #         # Classify values present (all_numeric, numeric_or_empty, numeric_or_empty)
     #         values_classification = classify_numeric_list(values)
@@ -520,28 +507,30 @@ def validate_dataframes(schema_file_map: dict, schemas_dir: str) -> list[dict]:
         df = read_table(mut_table_fp)
 
         table_errors = validate_single_dataframe(df, schema, schemas_dir)
-        if len(table_errors) > 0:
-            for err in table_errors:
-                logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
-                dataframes_status_dict_list.append(
-                    {
-                        "mutation_df": df,
-                        "segment": schema["name"],
-                        "errors": table_errors,
-                        "validation_status": "Failed",
-                    }
-                )
-        else:
-            logging.info("Table %s passed validation.", Path(mut_table_fp).name)
-            dataframes_status_dict_list.append(
-                {
-                    "mutation_df": df,
-                    "mutation_table_fp": mut_table_fp,
-                    "segment": schema["name"],
-                    "errors": table_errors,
-                    "validation_status": "Passed",
-                }
-            )
+        table_errors_cleaned = [x for x in table_errors if x is not None]
+        logging.debug(f"table_errors list: {table_errors_cleaned}")
+        breakpoint()
+        # if len(table_errors_cleaned) > 0:
+        #     for err in table_errors_cleaned:
+        #         logging.error("Validation error in %s: %s", Path(mut_table_fp).name, err)
+        #         dataframes_status_dict_list.append(
+        #             {
+        #                 "mutation_df": df,
+        #                 "segment": schema["name"],
+        #                 "errors": table_errors_cleaned,
+        #                 "validation_status": "Failed",
+        #             }
+        #         )
+        # else:
+        #     logging.info("Table %s passed validation.", Path(mut_table_fp).name)
+        #     dataframes_status_dict_list.append(
+        #         {
+        #             "mutation_df": df,
+        #             "mutation_table_fp": mut_table_fp,
+        #             "segment": schema["name"],
+        #             "validation_status": "Passed",
+        #         }
+        #     )
     return dataframes_status_dict_list
 
 

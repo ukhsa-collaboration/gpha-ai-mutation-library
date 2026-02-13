@@ -44,11 +44,11 @@ columns:
   - name: name
     type: str
     required: true
-    pattern: "^[aA-zZ][0-9]+[aA-zZ]$"
+    pattern: "^(?:[A-Z][0-9]+[A-Z]|del)$"
   - name: subtype_tested
     type: str
     required: false
-    pattern: "^H([0-9]+|[Xx])N([0-9]+|[Xx])$" # e.g. H5N1
+    pattern: "^H([0-9]+|[Xx]+)N([0-9]+|[Xx]+)$" # e.g. H5N1
   - name: subtype_notes
     type: str
     required: false
