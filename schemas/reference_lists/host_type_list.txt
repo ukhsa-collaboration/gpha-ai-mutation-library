@@ -1,3 +1,5 @@
 avian
 mammalian
 other
+human
+insect

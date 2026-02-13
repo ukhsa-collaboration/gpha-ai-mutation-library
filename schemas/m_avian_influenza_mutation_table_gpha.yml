@@ -24,7 +24,7 @@ columns:
     required: true
   - name: position_N2
     type: int
-    required: true
+    required: false
   - name: ref_AA
     type: str
     required: true
@@ -36,11 +36,11 @@ columns:
   - name: name
     type: str
     required: true
-    pattern: "^[A-Z][0-9]+[A-Z]$"
+    pattern: "^(?:[A-Za-z][0-9]+[A-Za-z]+)$"
   - name: subtype_tested
     type: str
     required: false
-    pattern: "^H[0-9]+N[0-9]+$" # e.g. H5N1
+    pattern: "^H([0-9]+|[Xx])N([0-9]+|[Xx])$" # e.g. H5N1
   - name: subtype_notes
     type: str
     required: false
