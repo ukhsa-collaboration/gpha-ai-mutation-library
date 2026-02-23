@@ -1,0 +1,45 @@
+2026-02-06 17:02:52,058 | root | INFO     | 
+########################################################################################################
+User: nicholas.ellaby@ukhsa.gov.uk started table validation and update process.
+########################################################################################################
+Arguments supplied:   --input /home/phe.gov.uk/nicholas.ellaby/git/gpha-ai-mutation-library/edited_tables/  --tables-dir ai-mutation-table-tests/tables  --archive-dir ai-mutation-table-tests/archive-dir  --schema-dir /home/phe.gov.uk/nicholas.ellaby/git/gpha-ai-mutation-library/schemas/  --log-file ai-mutation-table-tests/updates.log  --log-level DEBUG  --user nicholas.ellaby@ukhsa.gov.uk
+2026-02-06 17:02:52,162 | root | INFO     | Checking Schema formats are correct.
+2026-02-06 17:02:52,162 | root | INFO     | Schema formatting check passed.
+2026-02-06 17:02:52,162 | root | INFO     | Mapped schema 'pa' to file 'pa_avian_influenza_mutation_table_gpha_filtered.tsv'.
+2026-02-06 17:02:52,162 | root | INFO     | Mapped schema 'ns' to file 'ns_avian_influenza_mutation_table_gpha_filtered.tsv'.
+2026-02-06 17:02:52,163 | root | INFO     | Mapped schema 'm' to file 'm_avian_influenza_mutation_table_gpha_filtered.tsv'.
+2026-02-06 17:02:52,163 | root | INFO     | Mapped schema 'pb2' to file 'pb2_avian_influenza_mutation_table_gpha_filtered.tsv'.
+2026-02-06 17:02:52,164 | root | INFO     | Mapped schema 'na' to file 'na_avian_influenza_mutation_table_gpha_filtered.tsv'.
+2026-02-06 17:02:52,165 | root | INFO     | Mapped schema 'pb1' to file 'pb1_avian_influenza_mutation_table_gpha_filtered.tsv'.
+2026-02-06 17:02:52,165 | root | INFO     | Mapped schema 'np' to file 'np_avian_influenza_mutation_table_gpha_filtered.tsv'.
+2026-02-06 17:02:52,166 | root | INFO     | Mapped schema 'ha' to file 'ha_avian_influenza_mutation_table_gpha_filtered.tsv'.
+2026-02-06 17:02:52,166 | root | INFO     | Schema mapping completed for 8 files.
+2026-02-06 17:02:52,167 | root | INFO     | Validating table pa_avian_influenza_mutation_table_gpha_filtered.tsv against schema pa.
+2026-02-06 17:02:52,175 | root | DEBUG    | schema: {'name': 'pa', 'filename': 'pa_avian_influenza_mutation_table_gpha.tsv', 'strict_columns': True, 'primary_key': ['feature_type', 'combination_name', 'combination_id', 'segment', 'position_met1', 'ref_AA', 'alt_AA', 'name', 'subtype_tested', 'subtype_notes', 'phenotypic_consequences', 'phenotypic_category', 'concern_score', 'confidence_score', 'phenotypic_effect', 'host_type', 'host_taxon', 'source', 'references', 'PMID', 'additional_comments', 'gpha_background', 'gpha_known_muts'], 'columns': [{'name': 'feature_type', 'type': 'str', 'required': True, 'allowed_values_file': 'reference_lists/feature_type_list.txt'}, {'name': 'combination_name', 'type': 'str', 'required': False}, {'name': 'combination_id', 'type': 'str', 'required': False}, {'name': 'segment', 'type': 'str', 'required': True, 'allowed_values_file': 'reference_lists/segment_list.txt'}, {'name': 'position_met1', 'type': 'int', 'required': True}, {'name': 'ref_AA', 'type': 'str', 'required': True, 'allowed_values_file': 'reference_lists/aa_list.txt'}, {'name': 'alt_AA', 'type': 'str', 'required': True, 'allowed_values_file': 'reference_lists/aa_list.txt'}, {'name': 'name', 'type': 'str', 'required': True, 'pattern': '^[aA-zZ][0-9]+[aA-zZ]$'}, {'name': 'subtype_tested', 'type': 'str', 'required': False, 'pattern': '^H([0-9]+|[Xx])N([0-9]+|[Xx])$'}, {'name': 'subtype_notes', 'type': 'str', 'required': False}, {'name': 'phenotypic_consequences', 'type': 'str', 'required': True}, {'name': 'phenotypic_category', 'type': 'str', 'required': True, 'allowed_values_file': 'reference_lists/phenotypic_categories_list.txt'}, {'name': 'concern_score', 'required': False, 'type': 'str'}, {'name': 'confidence_score', 'required': False, 'type': 'str'}, {'name': 'phenotypic_effect', 'type': 'str', 'required': False}, {'name': 'host_type', 'type': 'str', 'required': False, 'allowed_values_file': 'reference_lists/host_type_list.txt'}, {'name': 'host_taxon', 'type': 'str', 'required': False}, {'name': 'source', 'type': 'str', 'required': True}, {'name': 'references', 'type': 'str', 'required': True}, {'name': 'PMID', 'type': 'str', 'required': False}, {'name': 'additional_comments', 'type': 'str', 'required': False}, {'name': 'gpha_background', 'type': 'str', 'required': False, 'allowed_values': ['Y', 'N', None]}, {'name': 'gpha_known_muts', 'type': 'str', 'required': False, 'allowed_values': ['Y', 'N', None]}]}
+2026-02-06 17:02:52,182 | root | DEBUG    | feature_type               False
+combination_name            True
+combination_id              True
+segment                    False
+position_met1              False
+ref_AA                     False
+alt_AA                     False
+name                       False
+subtype_tested             False
+subtype_notes               True
+phenotypic_consequences    False
+phenotypic_category        False
+concern_score               True
+confidence_score            True
+phenotypic_effect          False
+host_type                  False
+host_taxon                  True
+source                     False
+references                 False
+PMID                       False
+additional_comments         True
+gpha_background             True
+gpha_known_muts             True
+dtype: bool
+2026-02-06 17:02:52,185 | root | DEBUG    | Columns requiring values: ['feature_type', 'segment', 'position_met1', 'ref_AA', 'alt_AA', 'name', 'phenotypic_consequences', 'phenotypic_category', 'source', 'references']
+2026-02-06 17:02:52,185 | root | DEBUG    | Columns missing data: ['combination_name', 'combination_id', 'subtype_notes', 'concern_score', 'confidence_score', 'host_taxon', 'additional_comments', 'gpha_background', 'gpha_known_muts']
+2026-02-06 17:02:52,186 | root | CRITICAL | The following columns are missing values in every row: []
