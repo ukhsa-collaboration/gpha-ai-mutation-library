@@ -60,7 +60,7 @@ def dir_path(path: str) -> str:
         p.mkdir(parents=True, exist_ok=True)
         return path
     except Exception as e:
-        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory and could not be created: {e}")
+        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory and could not be created: {e}") from e
 
 
 def utc_now_iso() -> str:
