@@ -37,7 +37,7 @@ LOG_FILE_DEFAULT = repo_dir / "updates.log"
 def setup_logging(log_filename, logging_level):
     handlers = [
         logging.StreamHandler(),  # stdout
-        logging.FileHandler(log_filename, mode="w"),  # file
+        logging.FileHandler(log_filename, mode="a"),  # file
     ]
 
     logging.basicConfig(
