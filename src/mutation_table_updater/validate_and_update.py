@@ -602,6 +602,7 @@ def update_tables(
                 copy_table(new_table_path, tables_dir)
             else:
                 copy_table(new_table_path, tables_dir)
+        return True
 
 
 def archive_cleanup(archive_dir: str) -> None:
