@@ -262,64 +262,78 @@ def test_correct_map_schema_file(load_good_tables, load_good_schemas):
 
 
 @pytest.mark.parametrize(
-    "description,input,errormsg",
+    "description,input,errormsg,schemadir",
     [
         (
             "Test unexpected column is identified",
             "table_unexpected_col",
             "Unexpected columns present: unexpected_column",
+            SCRIPT_DIR / "schemas/good_schemas/",
         ),
         (
             "Test required non-null values are identified",
             "table_required_values_error",
             "feature_type: 1 required values are null",
+            SCRIPT_DIR / "schemas/good_schemas/",
         ),
-        ("Test int type violations are identified", "int_type_check_error", "position_met1: 1 rows fail type 'int'"),
+        (
+            "Test int type violations are identified",
+            "int_type_check_error",
+            "position_met1: 1 rows fail type 'int'",
+            SCRIPT_DIR / "schemas/good_schemas/",
+        ),
         (
             "Test regex pattern violations are identified",
             "subtype_pattern_error",
             "subtype_tested: 1 rows fail regex '^H[0-9]+N[0-9]+$'",
+            SCRIPT_DIR / "schemas/good_schemas/",
         ),
         (
             "Test allowed values are used in column",
             "allowed_aa_values_error",
-            "ref_AA: 1 row(s) contain values not present in the reference file (check schemas/reference_lists/).",
+            "Column ref_AA has incorrect value(s): 1",
+            SCRIPT_DIR / "schemas/good_schemas/",
         ),
         (
             "Test allowed values are allowed phenotypes",
             "allowed_phenotypes_values_error",
-            (
-                "phenotypic_category: 1 row(s) contain values not present in the reference file "
-                "(check schemas/reference_lists/)."
-            ),
+            "Column phenotypic_category has incorrect value(s): incorrect_value",
+            SCRIPT_DIR / "schemas/good_schemas/",
         ),
         (
             "Test high out-of-bounds values are identified",
             "oob_met1_position_error",
             "Value outside bounds (1 - 568) for column 'position_met1'. check values: [999]",
+            SCRIPT_DIR / "schemas/good_schemas/",
         ),
         (
             "Test low out-of-bounds values are identified",
             "oob_met1_min_position_error",
             "Value outside bounds (1 - 568) for column 'position_met1'. check values: [0]",
+            SCRIPT_DIR / "schemas/good_schemas/",
         ),
     ],
 )
-def test_table_integrity(description, input, errormsg, correct_ha_schema, request):
+def test_table_integrity(description, input, errormsg, schemadir, correct_ha_schema, request):
     df = request.getfixturevalue(input)
     schema = correct_ha_schema
 
-    errors = vau.validate_single_dataframe(df, schema)
-
+    errors = vau.validate_single_dataframe(df, schema, schemadir)
+    print(errors)
+    errors_cleaned = [x for x in errors if x is not None]
+    print(errors_cleaned)
+    error_messages = [msg for level, msg in errors_cleaned]
     # Check error message for unexpected column
-    assert errormsg in errors, f"Expected {errormsg}, got {errors}"
+    assert errormsg in error_messages, f"Expected {errormsg}, got {errors}"
 
 
 def test_correct_ha_table_validation(correct_ha_df, correct_ha_schema):
     df = correct_ha_df
     schema = correct_ha_schema
-    errors = vau.validate_single_dataframe(df, schema)
-    assert not errors
+    schemadir = SCRIPT_DIR / "schemas/good_schemas/"
+    errors = vau.validate_single_dataframe(df, schema, schemadir)
+    errors_cleaned = [x for x in errors if x is not None]
+    assert not errors_cleaned
 
 
 # To test saving archiving:
@@ -349,9 +363,7 @@ def test_save_new_table_no_existing_table(setup_empty_dirs, correct_ha_tsv):
     tables_dir, archive_dir = setup_empty_dirs
 
     update_status = vau.update_tables(
-        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}],
-        tables_dir,
-        archive_dir
+        [{"validation_status": "Passed", "mutation_table_fp": correct_ha_tsv, "segment": "ha"}], tables_dir, archive_dir
     )
 
     assert update_status is True
