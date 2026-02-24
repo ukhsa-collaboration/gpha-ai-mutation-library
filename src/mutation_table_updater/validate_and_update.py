@@ -37,7 +37,7 @@ LOG_FILE_DEFAULT = repo_dir / "updates.log"
 def setup_logging(log_filename, logging_level):
     handlers = [
         logging.StreamHandler(),  # stdout
-        logging.FileHandler(log_filename, mode="w"),  # file
+        logging.FileHandler(log_filename, mode="a"),  # file
     ]
 
     logging.basicConfig(
@@ -60,7 +60,7 @@ def dir_path(path: str) -> str:
         p.mkdir(parents=True, exist_ok=True)
         return path
     except Exception as e:
-        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory and could not be created: {e}")
+        raise argparse.ArgumentTypeError(f"'{path}' is not a valid directory and could not be created: {e}") from e
 
 
 def utc_now_iso() -> str:
@@ -473,7 +473,7 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
 
             # if it contains non-numeric values
             if len(non_nums) > 0:
-                msg = f"Column {col} cannot contain empty/null values. Values observed: {set(values)}"
+                msg = f"Column {col} cannot contain empty/null values. Values observed: {set(non_nums)}"
                 logging.critical(msg)
                 errors.append(msg)
             else:
@@ -485,7 +485,8 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
                         less_than = [x for x in series_clean.to_list() if x < lo]
                         greater_than = [x for x in series_clean.to_list() if x > hi]
                         if len(greater_than) > 0 or len(less_than) > 0:
-                            error = f"Value outside bounds ({lo} - {hi}) for column '{col}'. check values: {series_clean.to_list()}"
+                            error = f"Value outside bounds ({lo} - {hi}) for column '{col}'. "
+                            error += f"check values: {series_clean.to_list()}"
                             logging.critical(error)
                             errors.append(error)
 
@@ -584,7 +585,6 @@ def update_tables(
                 logging.info("Directory exists: %s", dir)
                 # Get existing files in folder
 
-        existing_files = [p for p in Path(tables_dir).iterdir() if p.is_file()]
         existing_filenames = [p.name for p in Path(tables_dir).iterdir() if p.is_file()]
         logging.debug(f"Existing Files: {existing_filenames}")
         # check if filenames match:
@@ -592,7 +592,6 @@ def update_tables(
         # Identify if segment table exists in tables_dir
         for validated_table in validated_tables:
             logging.debug(f"Copying new file to tables directory {validated_table[0]}")
-            segment_name = validated_table[1]
             new_table_path = validated_table[0]
             if Path(new_table_path).name in existing_filenames:
                 # Archive existing file
