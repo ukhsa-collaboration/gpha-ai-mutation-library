@@ -451,13 +451,10 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
 
             if len(not_allowed) > 0:
                 logging.debug(f"Values not allowed: {not_allowed}")
-                error = (
-                    f"{col}: {len(not_allowed)} row(s) contain values not "
-                    f"present in the reference file (check {fpath})."
-                )
                 if col_rule["required"] is True:
-                    logging.critical("Column %s has incorrect value(s): %s", col, ", ".join(map(str, set(not_allowed))))
-                    errors.append(error)
+                    error = f"Column {col} has incorrect value(s): {', '.join(map(str, set(not_allowed)))}"
+                    logging.critical(error)
+                    errors.append(("critical", error))
 
         # if schema expects numeric values
         if col_rule.get("type") in ("int", "float"):
@@ -473,9 +470,9 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
 
             # if it contains non-numeric values
             if len(non_nums) > 0:
-                msg = f"Column {col} cannot contain empty/null values. Values observed: {set(non_nums)}"
-                logging.critical(msg)
-                errors.append(msg)
+                error = f"Column {col} cannot contain empty/null values. Values observed: {set(non_nums)}"
+                logging.critical(error)
+                errors.append(("critical", error))
             else:
                 # If there are min/max values
                 if col_rule.get("min") and col_rule.get("max"):
@@ -488,7 +485,7 @@ def validate_single_dataframe(df, schema, schemas_dir) -> list[str]:
                             error = f"Value outside bounds ({lo} - {hi}) for column '{col}'. "
                             error += f"check values: {series_clean.to_list()}"
                             logging.critical(error)
-                            errors.append(error)
+                            errors.append(("critical", error))
 
     return errors
 
@@ -602,6 +599,7 @@ def update_tables(
                 copy_table(new_table_path, tables_dir)
             else:
                 copy_table(new_table_path, tables_dir)
+        return True
 
 
 def archive_cleanup(archive_dir: str) -> None:

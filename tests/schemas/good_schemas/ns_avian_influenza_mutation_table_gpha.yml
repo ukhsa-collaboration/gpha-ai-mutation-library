@@ -8,7 +8,7 @@ columns:
   - name: feature_type
     type: str
     required: true
-    allowed_values_file: "schemas/reference_lists/feature_type_list.txt"   # one gene name per line
+    allowed_values_file: "reference_lists/feature_type_list.txt"   # one gene name per line
   - name: combination_name
     type: str
     required: false
@@ -18,18 +18,18 @@ columns:
   - name: segment
     type: str
     required: true
-    allowed_values_file: "schemas/reference_lists/segment_list.txt"
+    allowed_values_file: "reference_lists/segment_list.txt"
   - name: position_gsgd
     type: int
     required: true
   - name: ref_AA
     type: str
     required: true
-    allowed_values_file: "schemas/reference_lists/aa_list.txt"
+    allowed_values_file: "reference_lists/aa_list.txt"
   - name: alt_AA
     type: str
     required: true
-    allowed_values_file: "schemas/reference_lists/aa_list.txt"
+    allowed_values_file: "reference_lists/aa_list.txt"
   - name: name
     type: str
     required: true
@@ -47,7 +47,7 @@ columns:
   - name: phenotypic_category
     type: str
     required: true
-    allowed_values_file: "schemas/reference_lists/phenotypic_categories_list.txt"
+    allowed_values_file: "reference_lists/phenotypic_categories_list.txt"
   - name: concern_score
     required: false
     type: str
@@ -60,7 +60,7 @@ columns:
   - name: host_type
     type: str
     required: false
-    allowed_values_file: "schemas/reference_lists/host_type_list.txt"
+    allowed_values_file: "reference_lists/host_type_list.txt"
   - name: host_taxon
     type: str
     required: false
